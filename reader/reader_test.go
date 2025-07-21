@@ -26,3 +26,22 @@ func TestReadAppFilter(t *testing.T) {
 		fmt.Printf("drawable: %s package-name: %s activity-name: %s component: %s\n", it.Drawable, it.PackageName, it.ActivityName, it.Component)
 	}
 }
+
+// TestReadIconPack validates the ReadIconPack function using the ICONPACK_PATH
+// environment variable. If the variable is unset, the test is skipped. When
+// set, each <string-array> is printed on its own line for inspection.
+func TestReadIconPack(t *testing.T) {
+	path := os.Getenv("ICONPACK_PATH")
+	if path == "" {
+		t.Skip("ICONPACK_PATH environment variable not set; skipping test")
+	}
+
+	res, err := ReadIconPack(path)
+	if err != nil {
+		t.Fatalf("failed to parse icon pack: %v", err)
+	}
+
+	for _, arr := range res.Arrays {
+		fmt.Printf("name: %s items: %v\n", arr.Name, arr.Items)
+	}
+}

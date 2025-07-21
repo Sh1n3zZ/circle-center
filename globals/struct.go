@@ -20,3 +20,17 @@ type Item struct {
 	PackageName  string `xml:"-"` // parsed package name
 	ActivityName string `xml:"-"` // parsed activity name
 }
+
+// StringArray represents a <string-array> element with its name attribute and
+// nested <item> strings.
+type StringArray struct {
+	Name  string   `xml:"name,attr"`
+	Items []string `xml:"item"`
+}
+
+// IconPackResources corresponds to the root <resources> element inside
+// icon_pack.xml. All string-array children are collected into the Arrays slice.
+type IconPackResources struct {
+	XMLName xml.Name      `xml:"resources"`
+	Arrays  []StringArray `xml:"string-array"`
+}

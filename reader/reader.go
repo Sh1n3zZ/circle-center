@@ -7,3 +7,8 @@ import "circle-center/globals"
 func ReadAppFilter(path string) ([]globals.Item, error) {
 	return ParseAppFilterFile(path)
 }
+
+// ReadIconPack provides a public API to parse icon_pack.xml files.
+func ReadIconPack(path string) (globals.IconPackResources, error) {
+	return ParseIconPackFile(path)
+}
