@@ -34,3 +34,12 @@ type IconPackResources struct {
 	XMLName xml.Name      `xml:"resources"`
 	Arrays  []StringArray `xml:"string-array"`
 }
+
+// LocalIcon represents a PNG icon discovered in an icons directory. The
+// FileName includes extension; PackageName is derived from the base name
+// (without extension). FilePath holds the full path to the file.
+type LocalIcon struct {
+	FileName    string
+	PackageName string
+	FilePath    string
+}

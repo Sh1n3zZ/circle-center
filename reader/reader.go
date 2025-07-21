@@ -12,3 +12,9 @@ func ReadAppFilter(path string) ([]globals.Item, error) {
 func ReadIconPack(path string) (globals.IconPackResources, error) {
 	return ParseIconPackFile(path)
 }
+
+// ReadLocalIcons parses a directory containing PNG icon files and returns the
+// slice of globals.LocalIcon structures.
+func ReadLocalIcons(dir string) ([]globals.LocalIcon, error) {
+	return ParseIconDirectory(dir)
+}
