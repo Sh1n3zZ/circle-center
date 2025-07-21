@@ -1,0 +1,6 @@
+{
+  "go.testEnvVars": {
+    "APPFILTER_PATH": "C:\\Users\\19341\\Documents\\Github\\re-circle\\app\\src\\main\\res\\xml\\appfilter.xml"
+  },
+  "go.testFlags": ["-v", "-count=1"]
+}
