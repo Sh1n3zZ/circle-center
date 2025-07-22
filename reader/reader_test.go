@@ -22,8 +22,8 @@ func TestReadAppFilter(t *testing.T) {
 	}
 
 	for _, it := range items {
-		// Output format: one line per item
-		fmt.Printf("drawable: %s package-name: %s activity-name: %s component: %s\n", it.Drawable, it.PackageName, it.ActivityName, it.Component)
+		// Output format: one line per item including comment-based app name
+		fmt.Printf("app-name: %s drawable: %s package-name: %s activity-name: %s component: %s\n", it.AppName, it.Drawable, it.PackageName, it.ActivityName, it.Component)
 	}
 }
 

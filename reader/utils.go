@@ -31,3 +31,10 @@ func ParseComponentInfo(component string) (packageName, activityName string) {
 		return strings.TrimSpace(parts[0]), strings.TrimSpace(parts[1])
 	}
 }
+
+// ParseCommentText trims whitespace around an XML comment text and returns
+// the clean application name string. It provides a single location to handle
+// any future sanitization logic for comment-based metadata.
+func ParseCommentText(comment string) string {
+	return strings.TrimSpace(comment)
+}

@@ -1,10 +1,12 @@
 package reader
 
 import (
-	"encoding/xml"
 	"fmt"
 	"io"
 	"os"
+	"strings"
+
+	"github.com/beevik/etree"
 
 	"circle-center/globals"
 )
@@ -13,12 +15,31 @@ import (
 // It returns a fully populated IconPackResources structure that contains all
 // <string-array> definitions.
 func parseIconPackFromReader(r io.Reader) (globals.IconPackResources, error) {
-	var res globals.IconPackResources
-	dec := xml.NewDecoder(r)
-	if err := dec.Decode(&res); err != nil {
-		return globals.IconPackResources{}, fmt.Errorf("failed to decode xml: %w", err)
+	doc := etree.NewDocument()
+	if _, err := doc.ReadFrom(r); err != nil {
+		return globals.IconPackResources{}, fmt.Errorf("failed to read xml: %w", err)
 	}
-	return res, nil
+
+	root := doc.SelectElement("resources")
+	if root == nil {
+		return globals.IconPackResources{}, fmt.Errorf("missing <resources> root element")
+	}
+
+	var arrays []globals.StringArray
+
+	for _, sa := range root.SelectElements("string-array") {
+		name := sa.SelectAttrValue("name", "")
+		var items []string
+		for _, itemEl := range sa.SelectElements("item") {
+			items = append(items, strings.TrimSpace(itemEl.Text()))
+		}
+		arrays = append(arrays, globals.StringArray{
+			Name:  name,
+			Items: items,
+		})
+	}
+
+	return globals.IconPackResources{Arrays: arrays}, nil
 }
 
 // ParseIconPackFile opens and parses an icon_pack.xml file from the given path.

@@ -17,6 +17,7 @@ type Resources struct {
 type Item struct {
 	Component    string `xml:"component,attr"`
 	Drawable     string `xml:"drawable,attr"`
+	AppName      string `xml:"-"` // app name parsed from XML comment
 	PackageName  string `xml:"-"` // parsed package name
 	ActivityName string `xml:"-"` // parsed activity name
 }

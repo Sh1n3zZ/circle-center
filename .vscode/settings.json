@@ -2,7 +2,13 @@
   "go.testEnvVars": {
     "APPFILTER_PATH": "C:\\Users\\19341\\Documents\\Github\\re-circle\\app\\src\\main\\res\\xml\\appfilter.xml",
     "ICONPACK_PATH": "C:\\Users\\19341\\Documents\\Github\\re-circle\\app\\src\\main\\res\\values\\icon_pack.xml",
-    "ICON_DIR_PATH": "C:\\Users\\19341\\Downloads\\icons\\res\\drawable-xxhdpi"
+    "ICON_DIR_PATH": "C:\\Users\\19341\\Downloads\\icons\\res\\drawable-xxhdpi",
+    "RENAME_SRC_DIR": "C:\\Users\\19341\\Downloads\\icons\\res\\drawable-xxhdpi",
+    "RENAME_DST_DIR": "C:\\Users\\19341\\Downloads\\icons\\res\\drawable-xxhdpi-renamed"
   },
-  "go.testFlags": ["-v", "-count=1"]
+  "go.testFlags": [
+    "-v",
+    "-count=1"
+  ],
+  "terminal.integrated.scrollback": 10000
 }
