@@ -35,6 +35,14 @@ const Header = () => {
                 <Link to="/about">About</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
+            <NavigationMenuItem>
+              <NavigationMenuLink
+                asChild
+                className={navigationMenuTriggerStyle()}
+              >
+                <Link to="/reader">Reader</Link>
+              </NavigationMenuLink>
+            </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
       </div>

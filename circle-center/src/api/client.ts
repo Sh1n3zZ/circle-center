@@ -1,9 +1,9 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
-import { BASE_URL } from "./config";
+import { BASE_URL, API_PREFIX } from "./config";
 
 // Create a single axios instance to be used throughout the application.
 const client = axios.create({
-  baseURL: BASE_URL,
+  baseURL: `${BASE_URL}${API_PREFIX}`,
   timeout: 10000, // 10 seconds timeout
   headers: {
     "Content-Type": "application/json",

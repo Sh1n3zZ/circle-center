@@ -3,6 +3,7 @@ import Header from './components/layout/header'
 import { Toaster } from './components/ui/sonner'
 import './App.css'
 import Home from './pages/Home'
+import Reader from './pages/Reader'
 
 const About = () => (
   <div className="p-4 text-center">
@@ -20,6 +21,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/about" element={<About />} />
+            <Route path="/reader" element={<Reader />} />
           </Routes>
         </main>
 
