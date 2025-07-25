@@ -1,6 +1,7 @@
 import React, { useState } from "react"
 import ReaderChooseUploadFile from "@/components/reader/ReaderChooseUploadFile"
 import ReaderCard from "@/components/reader/ReaderCard"
+import ReaderDiffCard from "@/components/reader/ReaderDiffCard"
 import type { ReadFileResponse } from "@/api/reader/types"
 
 const Reader: React.FC = () => {
@@ -13,6 +14,8 @@ const Reader: React.FC = () => {
       <ReaderChooseUploadFile onSuccess={setResult} />
 
       <ReaderCard data={result} />
+
+      <ReaderDiffCard />
     </div>
   )
 }

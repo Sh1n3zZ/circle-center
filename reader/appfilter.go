@@ -10,9 +10,9 @@ import (
 	"circle-center/globals"
 )
 
-// parseFromReader reads an appfilter.xml file from the provided io.Reader and
+// ParseFromReader reads an appfilter.xml file from the provided io.Reader and
 // returns the slice of parsed globals.Item structures.
-func parseFromReader(r io.Reader) ([]globals.Item, error) {
+func ParseFromReader(r io.Reader) ([]globals.Item, error) {
 	doc := etree.NewDocument()
 	if _, err := doc.ReadFrom(r); err != nil {
 		return nil, fmt.Errorf("failed to read xml: %w", err)
@@ -68,5 +68,5 @@ func ParseAppFilterFile(path string) ([]globals.Item, error) {
 	}
 	defer f.Close()
 
-	return parseFromReader(f)
+	return ParseFromReader(f)
 }

@@ -51,7 +51,7 @@ func reader(c *gin.Context) {
 		}
 		c.JSON(http.StatusOK, gin.H{"icon_pack": res})
 	case "", "appfilter":
-		items, err := parseFromReader(f)
+		items, err := ParseFromReader(f)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 			return
