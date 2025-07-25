@@ -3,11 +3,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
-import ReaderDiffItem from "./ReaderDiffItem"
 import { diffAppFilters } from "@/api/diff/diff"
 import type { DiffAppFiltersResponse } from "@/api/diff/types"
+import ReaderDiffInfo from "./ReaderDiffInfo"
 
 interface ReaderDiffCardProps {
   onDiffComplete?: (result: DiffAppFiltersResponse) => void
@@ -113,104 +112,7 @@ const ReaderDiffCard: React.FC<ReaderDiffCardProps> = ({ onDiffComplete }) => {
 
         {/* Diff Results */}
         {diffResult && (
-          <div className="space-y-4">
-            {/* Summary */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 p-4 bg-gray-50 rounded-lg">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {diffResult.summary.only_first_count}
-                </div>
-                <div className="text-sm text-gray-600">仅在第一个文件中</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-red-600">
-                  {diffResult.summary.only_second_count}
-                </div>
-                <div className="text-sm text-gray-600">仅在第二个文件中</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-gray-600">
-                  {diffResult.summary.common_count}
-                </div>
-                <div className="text-sm text-gray-600">共同项</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {diffResult.summary.first_count}
-                </div>
-                <div className="text-sm text-gray-600">第一个文件总数</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">
-                  {diffResult.summary.second_count}
-                </div>
-                <div className="text-sm text-gray-600">第二个文件总数</div>
-              </div>
-            </div>
-
-            {/* Detailed Results */}
-            <Tabs defaultValue="only-first" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="only-first">
-                  仅在第一个文件中 ({diffResult?.only_in_first?.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="only-second">
-                  仅在第二个文件中 ({diffResult?.only_in_second?.length || 0})
-                </TabsTrigger>
-                <TabsTrigger value="common">
-                  共同项 ({diffResult?.common?.length || 0})
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="only-first" className="space-y-4">
-                {!diffResult?.only_in_first || diffResult.only_in_first.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">没有仅在第一个文件中的项</p>
-                ) : (
-                  <div className="grid gap-4">
-                    {diffResult.only_in_first.map((item, index) => (
-                      <ReaderDiffItem
-                        key={`only-first-${index}`}
-                        {...item}
-                        type="only-first"
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="only-second" className="space-y-4">
-                {!diffResult?.only_in_second || diffResult.only_in_second.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">没有仅在第二个文件中的项</p>
-                ) : (
-                  <div className="grid gap-4">
-                    {diffResult.only_in_second.map((item, index) => (
-                      <ReaderDiffItem
-                        key={`only-second-${index}`}
-                        {...item}
-                        type="only-second"
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-              
-              <TabsContent value="common" className="space-y-4">
-                {!diffResult?.common || diffResult.common.length === 0 ? (
-                  <p className="text-center text-gray-500 py-8">没有共同项</p>
-                ) : (
-                  <div className="grid gap-4">
-                    {diffResult.common.map((item, index) => (
-                      <ReaderDiffItem
-                        key={`common-${index}`}
-                        {...item}
-                        type="common"
-                      />
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
+          <ReaderDiffInfo diffResult={diffResult} />
         )}
       </CardContent>
     </Card>
