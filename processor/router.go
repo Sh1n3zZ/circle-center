@@ -1,6 +1,8 @@
-package editor
+package processor
 
 import (
+	"circle-center/processor/svc"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -8,6 +10,7 @@ import (
 // Typically the passed router should be a version group (e.g., /v1).
 func RegisterRoutes(router gin.IRouter) {
 	processorGroup := router.Group("/processor")
-	processorGroup.POST("/diffappfilters", diffAppFilters)
-	processorGroup.POST("/difficons", diffIcons)
+	processorGroup.POST("/diffappfilters", svc.DiffAppFilters)
+	processorGroup.POST("/difficons", svc.DiffIcons)
+	processorGroup.POST("/mergeappfilters", svc.MergeAppFilters)
 }

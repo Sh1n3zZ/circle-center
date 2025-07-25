@@ -1,7 +1,8 @@
-package editor
+package svc
 
 import (
 	"circle-center/globals"
+	"circle-center/processor/operation"
 	"io"
 	"net/http"
 
@@ -13,7 +14,7 @@ import (
 // diffAppFilters handles POST /diffappfilters which accepts two form-data file fields:
 // "file1" and "file2" containing appfilter.xml files to compare.
 // It returns the differences in JSON format.
-func diffAppFilters(c *gin.Context) {
+func DiffAppFilters(c *gin.Context) {
 	// Get first file
 	file1Header, err := c.FormFile("file1")
 	if err != nil {
@@ -110,7 +111,7 @@ func diffAppFilters(c *gin.Context) {
 // diffIcons handles POST /difficons which accepts form-data with:
 // "icon_dir" (directory path) and "icon_pack" (file path) to compare local icons
 // with icon_pack.xml entries.
-func diffIcons(c *gin.Context) {
+func DiffIcons(c *gin.Context) {
 	iconDir := c.PostForm("icon_dir")
 	if iconDir == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "missing icon_dir field"})
@@ -123,7 +124,7 @@ func diffIcons(c *gin.Context) {
 		return
 	}
 
-	missing, err := FindMissingIcons(iconDir, iconPackPath)
+	missing, err := operation.FindMissingIcons(iconDir, iconPackPath)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "diff failed: " + err.Error()})
 		return

@@ -10,9 +10,13 @@ import ReaderDiffInfo from "./ReaderDiffInfo"
 
 interface ReaderDiffCardProps {
   onDiffComplete?: (result: DiffAppFiltersResponse) => void
+  onFilesSelected?: (files: { file1: File; file2: File }) => void
 }
 
-const ReaderDiffCard: React.FC<ReaderDiffCardProps> = ({ onDiffComplete }) => {
+const ReaderDiffCard: React.FC<ReaderDiffCardProps> = ({
+  onDiffComplete,
+  onFilesSelected,
+}) => {
   const [file1, setFile1] = useState<File | null>(null)
   const [file2, setFile2] = useState<File | null>(null)
   const [isLoading, setIsLoading] = useState(false)
@@ -22,11 +26,17 @@ const ReaderDiffCard: React.FC<ReaderDiffCardProps> = ({ onDiffComplete }) => {
   const handleFile1Change = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     setFile1(file || null)
+    if (file && file2) {
+      onFilesSelected?.({ file1: file, file2 })
+    }
   }
 
   const handleFile2Change = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     setFile2(file || null)
+    if (file1 && file) {
+      onFilesSelected?.({ file1, file2: file })
+    }
   }
 
   const handleDiff = async () => {
