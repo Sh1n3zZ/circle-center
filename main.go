@@ -51,9 +51,8 @@ func main() {
 	}
 	defer dbpkg.CloseRedis()
 
-	// Run database migrations if migrations path exists
-	if _, err := os.Stat("migrations"); err == nil {
-		if err := dbpkg.RunMigrations("migrations"); err != nil {
+	if _, err := os.Stat("repository/migrations"); err == nil {
+		if err := dbpkg.RunMigrations("repository/migrations"); err != nil {
 			log.Printf("Warning: Failed to run migrations: %v", err)
 		}
 	}
