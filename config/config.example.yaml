@@ -1,0 +1,67 @@
+# Circle Center Application Configuration
+# Copy this file to config.yaml and modify the values as needed
+
+# Server configuration
+server:
+  # Server host address (0.0.0.0 for all interfaces)
+  host: "0.0.0.0"
+  # Server port
+  port: 8080
+  # Read timeout for HTTP requests
+  read_timeout: "30s"
+  # Write timeout for HTTP responses
+  write_timeout: "30s"
+  # Idle timeout for HTTP connections
+  idle_timeout: "60s"
+
+# MySQL database configuration
+mysql:
+  # MySQL server host
+  host: "localhost"
+  # MySQL server port
+  port: 3306
+  # MySQL username
+  username: "root"
+  # MySQL password (leave empty if no password)
+  password: ""
+  # Database name
+  database: "circle_center"
+  # Character set
+  charset: "utf8mb4"
+  # Parse time values
+  parse_time: true
+  # Location for time parsing
+  loc: "Local"
+  # Maximum number of open connections
+  max_open_conns: 25
+  # Maximum number of idle connections
+  max_idle_conns: 5
+  # Maximum lifetime of connections
+  max_lifetime: "1h"
+  # Enable multi-statement support for migrations
+  multi_statement: true
+
+# Redis configuration
+redis:
+  # Redis server host
+  host: "localhost"
+  # Redis server port
+  port: 6379
+  # Redis password (leave empty if no password)
+  password: ""
+  # Redis database number (0-15)
+  db: 0
+  # Connection pool size
+  pool_size: 10
+  # Minimum number of idle connections
+  min_idle_conns: 5
+  # Maximum number of retries
+  max_retries: 3
+  # Dial timeout
+  dial_timeout: "5s"
+  # Read timeout
+  read_timeout: "3s"
+  # Write timeout
+  write_timeout: "3s"
+  # Idle timeout
+  idle_timeout: "5m"
