@@ -7,6 +7,7 @@ import (
 
 	configure "circle-center/globals/configure"
 	dbpkg "circle-center/globals/db"
+	"circle-center/panel/account"
 	editor "circle-center/processor"
 	"circle-center/reader"
 )
@@ -62,6 +63,7 @@ func main() {
 	v1 := r.Group("/v1")
 	reader.RegisterRoutes(v1)
 	editor.RegisterRoutes(v1)
+	account.RegisterRoutes(v1, dbpkg.GetDB().DB)
 
 	serverAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Starting server on %s", serverAddr)
