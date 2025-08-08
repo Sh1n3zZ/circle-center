@@ -20,5 +20,8 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB) {
 
 		// User registration
 		account.POST("/register", handler.RegisterUser)
+
+		// User login
+		account.POST("/login", handler.LoginUser)
 	}
 }

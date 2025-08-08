@@ -86,6 +86,76 @@ func (h *UserHandler) RegisterUser(c *gin.Context) {
 	})
 }
 
+// LoginUser handles the user login HTTP endpoint
+// @Summary Login user
+// @Description Authenticate user with email and password
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param request body svc.LoginRequest true "User login information"
+// @Success 200 {object} svc.LoginResponse
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /account/login [post]
+func (h *UserHandler) LoginUser(c *gin.Context) {
+	var req svc.LoginRequest
+
+	// Bind and validate request
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, ErrorResponse{
+			Error:   "Invalid request data",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	// Login user
+	response, err := h.userService.LoginUser(c.Request.Context(), &req)
+	if err != nil {
+		// Handle specific errors
+		switch err.Error() {
+		case "invalid email or password":
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error:   "Authentication failed",
+				Message: "Invalid email or password",
+			})
+			return
+		case "account is not active":
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error:   "Account inactive",
+				Message: "Your account is not active",
+			})
+			return
+		case "account is temporarily locked":
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error:   "Account locked",
+				Message: "Your account is temporarily locked",
+			})
+			return
+		case "account locked due to too many failed attempts":
+			c.JSON(http.StatusUnauthorized, ErrorResponse{
+				Error:   "Account locked",
+				Message: "Account locked due to too many failed attempts. Please try again later.",
+			})
+			return
+		default:
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Error:   "Login failed",
+				Message: err.Error(),
+			})
+			return
+		}
+	}
+
+	// Return success response
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Login successful",
+		"data":    response,
+	})
+}
+
 // ErrorResponse represents an error response
 type ErrorResponse struct {
 	Error   string `json:"error"`

@@ -6,6 +6,7 @@ import {
   NavigationMenuLink,
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
+import { Button } from '@/components/ui/button'
 
 const Header = () => {
   return (
@@ -45,6 +46,16 @@ const Header = () => {
             </NavigationMenuItem>
           </NavigationMenuList>
         </NavigationMenu>
+
+        {/* Auth Buttons */}
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link to="/login">Login</Link>
+          </Button>
+          <Button asChild>
+            <Link to="/login?tab=register">Register</Link>
+          </Button>
+        </div>
       </div>
     </header>
   )

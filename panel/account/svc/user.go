@@ -47,6 +47,24 @@ type RegisterResponse struct {
 	CreatedAt   string `json:"created_at"`
 }
 
+// LoginRequest represents the user login request
+type LoginRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
+// LoginResponse represents the user login response
+type LoginResponse struct {
+	ID          uint64 `json:"id"`
+	Username    string `json:"username"`
+	Email       string `json:"email"`
+	DisplayName string `json:"display_name,omitempty"`
+	Phone       string `json:"phone,omitempty"`
+	Locale      string `json:"locale"`
+	Timezone    string `json:"timezone"`
+	Token       string `json:"token,omitempty"`
+}
+
 // RegisterUser handles user registration
 func (s *UserService) RegisterUser(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) {
 	// Validate username uniqueness
@@ -120,6 +138,77 @@ func (s *UserService) RegisterUser(ctx context.Context, req *RegisterRequest) (*
 	}
 
 	return response, nil
+}
+
+// LoginUser handles user login
+func (s *UserService) LoginUser(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
+	// Get user by email
+	user, err := s.queries.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, fmt.Errorf("invalid email or password")
+	}
+
+	// Check if account is active
+	if !user.Status {
+		return nil, fmt.Errorf("account is not active")
+	}
+
+	// Check if account is locked
+	if user.LockedUntil.Valid && user.LockedUntil.Time.After(time.Now()) {
+		return nil, fmt.Errorf("account is temporarily locked")
+	}
+
+	// Verify password
+	err = bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password))
+	if err != nil {
+		// Increment failed attempts
+		s.queries.IncrementFailedAttempts(ctx, user.ID)
+
+		// Lock account if too many failed attempts (5 or more)
+		if user.FailedAttempts >= 4 {
+			lockUntil := time.Now().Add(30 * time.Minute)
+			s.queries.LockUser(ctx, accountdb.LockUserParams{
+				LockedUntil: sql.NullTime{Time: lockUntil, Valid: true},
+				ID:          user.ID,
+			})
+			return nil, fmt.Errorf("account locked due to too many failed attempts")
+		}
+
+		return nil, fmt.Errorf("invalid email or password")
+	}
+
+	// Update last login and reset failed attempts
+	err = s.queries.UpdateLastLogin(ctx, user.ID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update login time: %w", err)
+	}
+
+	// Generate a simple token (in production, use JWT)
+	token, err := s.GenerateSecureToken(32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate token: %w", err)
+	}
+
+	// Build response
+	response := &LoginResponse{
+		ID:          user.ID,
+		Username:    user.Username,
+		Email:       user.Email,
+		DisplayName: user.DisplayName.String,
+		Phone:       user.Phone.String,
+		Locale:      user.Locale,
+		Timezone:    user.Timezone,
+		Token:       token,
+	}
+
+	return response, nil
+}
+
+// TestDatabaseConnection tests if the database connection is working
+func (s *UserService) TestDatabaseConnection(ctx context.Context) error {
+	// Try a simple query to test the connection
+	_, err := s.queries.CountUsers(ctx)
+	return err
 }
 
 // ValidateRegistrationRequest validates the registration request

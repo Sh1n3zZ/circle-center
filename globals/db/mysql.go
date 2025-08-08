@@ -167,7 +167,6 @@ func RunMigrations(migrationsPath string) error {
 			totalMigrations++
 			slog.Info("Successfully ran migrations for subdirectory", "path", subDirPath)
 		}
-		m.Close()
 	}
 
 	rootEntries, err := os.ReadDir(migrationsPath)
@@ -282,7 +281,6 @@ func RollbackMigrations(migrationsPath string) error {
 			totalRollbacks++
 			slog.Info("Successfully rolled back migrations for subdirectory", "path", subDirPath)
 		}
-		m.Close()
 	}
 
 	rootEntries, err := os.ReadDir(migrationsPath)
@@ -397,7 +395,6 @@ func GetMigrationVersion(migrationsPath string) (uint, error) {
 			}
 			totalVersions += version
 		}
-		m.Close()
 	}
 
 	rootEntries, err := os.ReadDir(migrationsPath)
