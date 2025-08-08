@@ -7,6 +7,7 @@ import (
 
 	configure "circle-center/globals/configure"
 	dbpkg "circle-center/globals/db"
+	"circle-center/globals/mail"
 	"circle-center/panel/account"
 	editor "circle-center/processor"
 	"circle-center/reader"
@@ -51,6 +52,19 @@ func main() {
 		log.Fatalf("Failed to connect to Redis: %v", err)
 	}
 	defer dbpkg.CloseRedis()
+
+	mailService, err := mail.NewMailService(&mail.MailConfig{
+		Host:     cfg.Mail.Host,
+		Port:     cfg.Mail.Port,
+		Username: cfg.Mail.Username,
+		Password: cfg.Mail.Password,
+		From:     cfg.Mail.From,
+		TLSMode:  cfg.Mail.TLSMode,
+	})
+	if err != nil {
+		log.Fatalf("Failed to initialize mail service: %v", err)
+	}
+	defer mailService.Close()
 
 	if _, err := os.Stat("repository/migrations"); err == nil {
 		if err := dbpkg.RunMigrations("repository/migrations"); err != nil {

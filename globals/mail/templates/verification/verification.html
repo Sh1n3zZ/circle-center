@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Circle Center Email Verification</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .content {
+            padding: 40px 30px;
+        }
+        .welcome-text {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        .description {
+            font-size: 16px;
+            color: #7f8c8d;
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        .verification-section {
+            background-color: #f8f9fa;
+            border-radius: 6px;
+            padding: 25px;
+            margin: 30px 0;
+            border-left: 4px solid #667eea;
+        }
+        .verification-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            padding: 12px 30px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            margin: 15px 0;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        .verification-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        .verification-link {
+            word-break: break-all;
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            background-color: #f1f3f4;
+            padding: 10px;
+            border-radius: 4px;
+            display: block;
+            margin-top: 15px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px 30px;
+            text-align: center;
+            color: #7f8c8d;
+            font-size: 14px;
+        }
+        .warning {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 4px;
+            padding: 15px;
+            margin: 20px 0;
+            color: #856404;
+        }
+        .warning strong {
+            color: #d63031;
+        }
+        @media only screen and (max-width: 600px) {
+            .container {
+                margin: 10px;
+                border-radius: 0;
+            }
+            .header, .content, .footer {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Circle Center</h1>
+        </div>
+        
+        <div class="content">
+            <div class="welcome-text">
+                Dear {{.Email}},
+            </div>
+            
+            <div class="description">
+                Thank you for registering Circle Center. To ensure the security of your account, please verify your email address.
+            </div>
+            
+            <div class="verification-section">
+                <h3 style="margin-top: 0; color: #2c3e50;">Verify your email</h3>
+                <p style="margin-bottom: 20px; color: #7f8c8d;">
+                    Please click the button below to verify your email address:
+                </p>
+
+                <a href="{{.VerificationURL}}?token={{.Token}}&email={{.Email}}" class="verification-button">
+                    Verify email address
+                </a>
+
+                <p style="margin: 20px 0 10px 0; color: #7f8c8d; font-size: 14px;">
+                    If the button is not clickable, please copy the following link to your browser address bar:
+                </p>
+                <a href="{{.VerificationURL}}?token={{.Token}}&email={{.Email}}" class="verification-link">
+                    {{.VerificationURL}}?token={{.Token}}&email={{.Email}}
+                </a>
+            </div>
+
+            <div class="warning">
+                <strong>Security reminder:</strong>
+                <ul style="margin: 10px 0; padding-left: 20px;">
+                    <li>This verification link will expire in 24 hours</li>
+                    <li>Please do not share this link with others</li>
+                    <li>If you did not register Circle Center, please ignore this email</li>
+                </ul>
+            </div>
+            
+            <div class="description">
+                If you have any questions, please contact our customer service team at any time.
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This email is automatically sent by the Circle Center system, please do not reply.</p>
+            <p>&copy; 2025 Circle Center. All rights reserved.</p>
+        </div>
+    </div>
+</body>
+</html>

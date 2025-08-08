@@ -65,3 +65,18 @@ redis:
   write_timeout: "3s"
   # Idle timeout
   idle_timeout: "5m"
+
+# Mail configuration
+mail:
+  # SMTP server host
+  host: "smtp.gmail.com"
+  # SMTP server port
+  port: 587
+  # SMTP username (email address)
+  username: ""
+  # SMTP password (app password for Gmail)
+  password: ""
+  # From email address
+  from: "noreply@gmail.com"
+  # TLS mode: "mandatory" (STARTTLS), "opportunistic" (STARTTLS with fallback), "ssl" (SSL), "none" (NoTLS)
+  tls_mode: "ssl"

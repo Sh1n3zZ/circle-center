@@ -9,6 +9,7 @@ type Config struct {
 	Server ServerConfig `yaml:"server"`
 	MySQL  MySQLConfig  `yaml:"mysql"`
 	Redis  RedisConfig  `yaml:"redis"`
+	Mail   MailConfig   `yaml:"mail"`
 }
 
 // ServerConfig holds server configuration
@@ -51,6 +52,16 @@ type RedisConfig struct {
 	IdleTimeout  time.Duration `yaml:"idle_timeout"`
 }
 
+// MailConfig holds email configuration
+type MailConfig struct {
+	Host     string `yaml:"host"`
+	Port     int    `yaml:"port"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+	From     string `yaml:"from"`
+	TLSMode  string `yaml:"tls_mode"` // "mandatory" (STARTTLS), "opportunistic" (STARTTLS with fallback), "ssl" (SSL), "none" (NoTLS)
+}
+
 // DefaultConfig returns default configuration
 func DefaultConfig() *Config {
 	return &Config{
@@ -87,6 +98,14 @@ func DefaultConfig() *Config {
 			ReadTimeout:  3 * time.Second,
 			WriteTimeout: 3 * time.Second,
 			IdleTimeout:  5 * time.Minute,
+		},
+		Mail: MailConfig{
+			Host:     "smtp.gmail.com",
+			Port:     587,
+			Username: "",
+			Password: "",
+			From:     "noreply@gmail.com",
+			TLSMode:  "ssl",
 		},
 	}
 }
