@@ -8,6 +8,7 @@ import (
 
 	"circle-center/globals/mail"
 	svc "circle-center/panel/account/svc"
+	"circle-center/panel/account/utils"
 )
 
 type UserHandler struct {
@@ -15,8 +16,15 @@ type UserHandler struct {
 }
 
 func NewUserHandler(db *sql.DB, mailService *mail.MailService) *UserHandler {
+	jwtClient, err := svc.NewJWTClientFromGlobalKeys()
+	if err != nil {
+		panic("Failed to create JWT client from global keys: " + err.Error())
+	}
+
+	authClient := svc.NewAuthClient(jwtClient)
+
 	return &UserHandler{
-		userService: svc.NewUserService(db, mailService),
+		userService: svc.NewUserService(db, mailService, authClient),
 	}
 }
 
@@ -111,10 +119,8 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		return
 	}
 
-	// Login user
 	response, err := h.userService.LoginUser(c.Request.Context(), &req)
 	if err != nil {
-		// Handle specific errors
 		switch err.Error() {
 		case "invalid email or password":
 			c.JSON(http.StatusUnauthorized, ErrorResponse{
@@ -151,7 +157,6 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 		}
 	}
 
-	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Login successful",
@@ -175,7 +180,6 @@ func (h *UserHandler) LoginUser(c *gin.Context) {
 func (h *UserHandler) ResendVerificationEmail(c *gin.Context) {
 	var req svc.ResendVerificationEmailRequest
 
-	// Bind and validate request
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, ErrorResponse{
 			Error:   "Invalid request data",
@@ -184,10 +188,8 @@ func (h *UserHandler) ResendVerificationEmail(c *gin.Context) {
 		return
 	}
 
-	// Resend verification email
 	response, err := h.userService.ResendVerificationEmail(c.Request.Context(), &req)
 	if err != nil {
-		// Handle specific errors
 		switch err.Error() {
 		case "user not found":
 			c.JSON(http.StatusNotFound, ErrorResponse{
@@ -210,11 +212,111 @@ func (h *UserHandler) ResendVerificationEmail(c *gin.Context) {
 		}
 	}
 
-	// Return success response
 	c.JSON(http.StatusOK, gin.H{
 		"success": true,
 		"message": "Verification email sent successfully",
 		"data":    response,
+	})
+}
+
+// LogoutUser handles the user logout HTTP endpoint
+// @Summary Logout user
+// @Description Logout user by revoking the JWT token
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /account/logout [post]
+func (h *UserHandler) LogoutUser(c *gin.Context) {
+	tokenString, err := utils.ExtractBearerToken(c)
+	if err != nil {
+		utils.RespondWithAuthError(c, err)
+		return
+	}
+
+	err = h.userService.LogoutUser(c.Request.Context(), tokenString)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "Logout failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Logged out successfully",
+	})
+}
+
+// RefreshToken handles the token refresh HTTP endpoint
+// @Summary Refresh JWT token
+// @Description Refresh an existing JWT token
+// @Tags account
+// @Accept json
+// @Produce json
+// @Param Authorization header string true "Bearer token"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} ErrorResponse
+// @Failure 401 {object} ErrorResponse
+// @Failure 500 {object} ErrorResponse
+// @Router /account/refresh [post]
+func (h *UserHandler) RefreshToken(c *gin.Context) {
+	tokenString, err := utils.ExtractBearerToken(c)
+	if err != nil {
+		utils.RespondWithAuthError(c, err)
+		return
+	}
+
+	authResult, err := h.userService.RefreshUserToken(c.Request.Context(), tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "Token refresh failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Token refreshed successfully",
+		"data":    authResult,
+	})
+}
+
+// GetUserProfileWithMiddleware shows how to use middleware for token extraction
+// This is an alternative implementation that uses middleware
+func (h *UserHandler) GetUserProfileWithMiddleware(c *gin.Context) {
+	tokenString, exists := utils.GetTokenFromContext(c)
+	if !exists {
+		c.JSON(http.StatusInternalServerError, ErrorResponse{
+			Error:   "Token not found in context",
+			Message: "Middleware token extraction failed",
+		})
+		return
+	}
+
+	userClaims, err := h.userService.ValidateUserToken(c.Request.Context(), tokenString)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, ErrorResponse{
+			Error:   "Token validation failed",
+			Message: err.Error(),
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "User profile retrieved successfully (via middleware)",
+		"data": gin.H{
+			"user_id":  userClaims.UserID,
+			"username": userClaims.Username,
+			"email":    userClaims.Email,
+		},
 	})
 }
 

@@ -33,3 +33,6 @@ go.work.sum
 
 # Config file
 config/config.yaml
+
+# JWT keys
+config/keys/

@@ -42,6 +42,7 @@ export interface LoginResponse {
     locale: string;
     timezone: string;
     token?: string;
+    expires_at?: number;
   };
 }
 

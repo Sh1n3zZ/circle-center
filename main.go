@@ -53,6 +53,10 @@ func main() {
 	}
 	defer dbpkg.CloseRedis()
 
+	if err := configure.InitializeJWTKeys(&cfg.JWT); err != nil {
+		log.Fatalf("Failed to initialize JWT keys: %v", err)
+	}
+
 	mailService, err := mail.NewMailService(&mail.MailConfig{
 		Host:     cfg.Mail.Host,
 		Port:     cfg.Mail.Port,

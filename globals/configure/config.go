@@ -11,6 +11,7 @@ type Config struct {
 	Redis    RedisConfig    `yaml:"redis"`
 	Mail     MailConfig     `yaml:"mail"`
 	Frontend FrontendConfig `yaml:"frontend"`
+	JWT      JWTConfig      `yaml:"jwt"`
 }
 
 // ServerConfig holds server configuration
@@ -68,6 +69,17 @@ type FrontendConfig struct {
 	BaseURL string `yaml:"base_url"`
 }
 
+// JWTConfig holds JWT configuration
+type JWTConfig struct {
+	Issuer         string        `yaml:"issuer"`
+	ExpiryTime     time.Duration `yaml:"expiry_time"`
+	RSAKeySize     int           `yaml:"rsa_key_size"`
+	KeysDirectory  string        `yaml:"keys_directory"`
+	PrivateKeyFile string        `yaml:"private_key_file"`
+	PublicKeyFile  string        `yaml:"public_key_file"`
+	AutoGenerate   bool          `yaml:"auto_generate"`
+}
+
 // DefaultConfig returns default configuration
 func DefaultConfig() *Config {
 	return &Config{
@@ -115,6 +127,15 @@ func DefaultConfig() *Config {
 		},
 		Frontend: FrontendConfig{
 			BaseURL: "http://localhost:5173",
+		},
+		JWT: JWTConfig{
+			Issuer:         "circle-center",
+			ExpiryTime:     168 * time.Hour,
+			RSAKeySize:     2048,
+			KeysDirectory:  "config/keys",
+			PrivateKeyFile: "jwt_private.pem",
+			PublicKeyFile:  "jwt_public.pem",
+			AutoGenerate:   true,
 		},
 	}
 }

@@ -1,5 +1,6 @@
 import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
 import { BASE_URL, API_PREFIX } from "./config";
+import { authStorage } from "../lib/storage";
 
 // Create a single axios instance to be used throughout the application.
 const client = axios.create({
@@ -10,16 +11,67 @@ const client = axios.create({
   },
 });
 
-// Request interceptor for attaching auth token, logging, etc.
-client.interceptors.request.use(
-  (config) => {
-    // Example: attach auth token if exists.
-    const token = localStorage.getItem("token");
-    if (token) {
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-ignore
-      config.headers["Authorization"] = `Bearer ${token}`;
+// Token refresh flag to prevent multiple concurrent refresh requests
+let isRefreshing = false;
+let failedQueue: Array<{
+  resolve: (value?: any) => void;
+  reject: (reason?: any) => void;
+}> = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(({ resolve, reject }) => {
+    if (error) {
+      reject(error);
+    } else {
+      resolve(token);
     }
+  });
+  
+  failedQueue = [];
+};
+
+// Request interceptor for attaching auth token and refresh
+client.interceptors.request.use(
+  async (config) => {
+    const skipAuthEndpoints = ['/account/login', '/account/register', '/account/resend-verification'];
+    const isAuthEndpoint = skipAuthEndpoints.some(endpoint => config.url?.includes(endpoint));
+    
+    if (isAuthEndpoint) {
+      return config;
+    }
+
+    const authHeader = authStorage.getAuthHeader();
+    
+    if (authHeader) {
+      config.headers["Authorization"] = authHeader;
+    }
+
+    if (authStorage.shouldRefreshToken() && !isRefreshing && !config.url?.includes('/account/refresh')) {
+      try {
+        isRefreshing = true;
+        
+        const { authApi } = await import('./auth/auth');
+        const refreshResponse = await authApi.refreshToken();
+        
+        await authStorage.setAuthToken(refreshResponse.data.token, refreshResponse.data.expires_at);
+        
+        config.headers["Authorization"] = `Bearer ${refreshResponse.data.token}`;
+        
+        processQueue(null, refreshResponse.data.token);
+      } catch (refreshError) {
+        await authStorage.clearAuth();
+        processQueue(refreshError, null);
+        
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     return config;
   },
   (error) => Promise.reject(error),
@@ -28,9 +80,49 @@ client.interceptors.request.use(
 // Response interceptor for handling global errors, refreshing tokens, etc.
 client.interceptors.response.use(
   (response) => response,
-  (error) => {
-    // Here you can handle global errors (e.g., 401 Unauthorized)
-    // console.error("API error", error);
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers['Authorization'] = `Bearer ${token}`;
+          return client(originalRequest);
+        }).catch(err => {
+          return Promise.reject(err);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const { authApi } = await import('./auth/auth');
+        const refreshResponse = await authApi.refreshToken();
+        
+        await authStorage.setAuthToken(refreshResponse.data.token, refreshResponse.data.expires_at);
+        
+        originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
+        
+        processQueue(null, refreshResponse.data.token);
+        
+        return client(originalRequest);
+      } catch (refreshError) {
+        await authStorage.clearAuth();
+        processQueue(refreshError, null);
+        
+        if (typeof window !== 'undefined') {
+          window.location.href = '/login';
+        }
+        
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
     return Promise.reject(error);
   },
 );
@@ -59,7 +151,6 @@ export function request<T = any>(options: RequestOptions<T>): Promise<AxiosRespo
   let finalTransformRequest = transformRequest;
 
   if (asFormData) {
-    // Convert plain object data to FormData if needed.
     if (data && typeof data === "object" && !(data instanceof FormData)) {
       const formData = new FormData();
       Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
@@ -72,13 +163,11 @@ export function request<T = any>(options: RequestOptions<T>): Promise<AxiosRespo
       finalData = formData;
     }
 
-    // Ensure the correct content type header. Let the browser set the boundary.
     finalHeaders = {
       ...finalHeaders,
       "Content-Type": "multipart/form-data",
     };
 
-    // When sending FormData, avoid default JSON stringify transform.
     finalTransformRequest = (reqData: unknown) => reqData;
   }
 
@@ -96,5 +185,50 @@ export const get = <T = any>(url: string, config?: RequestOptions) =>
 
 export const post = <T = any>(url: string, data?: any, config?: RequestOptions) =>
   request<T>({ url, method: "POST", data, ...config });
+
+// Authentication helper functions
+export const authHelpers = {
+  /**
+   * Store authentication data after successful login
+   */
+  async storeAuthData(token: string, expiresAt: number, userInfo?: any): Promise<boolean> {
+    const tokenStored = await authStorage.setAuthToken(token, expiresAt);
+    
+    if (userInfo) {
+      const userInfoStored = await authStorage.setUserInfo(userInfo);
+      return tokenStored && userInfoStored;
+    }
+    
+    return tokenStored;
+  },
+
+  /**
+   * Clear all authentication data (for logout)
+   */
+  async clearAuthData(): Promise<boolean> {
+    return await authStorage.clearAuth();
+  },
+
+  /**
+   * Check if user is currently authenticated
+   */
+  isAuthenticated(): boolean {
+    return authStorage.isAuthenticated();
+  },
+
+  /**
+   * Get current user info
+   */
+  getCurrentUser<T = any>(): T | null {
+    return authStorage.getUserInfo<T>();
+  },
+
+  /**
+   * Check if token needs refresh
+   */
+  shouldRefreshToken(): boolean {
+    return authStorage.shouldRefreshToken();
+  }
+};
 
 export default client;

@@ -20,12 +20,14 @@ import (
 type UserService struct {
 	queries     *accountdb.Queries
 	mailService *mail.MailService
+	authClient  *AuthClient
 }
 
-func NewUserService(db *sql.DB, mailService *mail.MailService) *UserService {
+func NewUserService(db *sql.DB, mailService *mail.MailService, authClient *AuthClient) *UserService {
 	return &UserService{
 		queries:     accountdb.New(db),
 		mailService: mailService,
+		authClient:  authClient,
 	}
 }
 
@@ -70,6 +72,7 @@ type LoginResponse struct {
 	Locale      string `json:"locale"`
 	Timezone    string `json:"timezone"`
 	Token       string `json:"token,omitempty"`
+	ExpiresAt   int64  `json:"expires_at,omitempty"`
 }
 
 // RegisterUser handles user registration
@@ -217,10 +220,10 @@ func (s *UserService) LoginUser(ctx context.Context, req *LoginRequest) (*LoginR
 		return nil, fmt.Errorf("failed to update login time: %w", err)
 	}
 
-	// Generate a simple token (in production, use JWT)
-	token, err := s.GenerateSecureToken(32)
+	// Generate JWT token using auth client
+	authResult, err := s.authClient.GenerateToken(ctx, user.ID, user.Username, user.Email)
 	if err != nil {
-		return nil, fmt.Errorf("failed to generate token: %w", err)
+		return nil, fmt.Errorf("failed to generate auth token: %w", err)
 	}
 
 	// Build response
@@ -232,7 +235,8 @@ func (s *UserService) LoginUser(ctx context.Context, req *LoginRequest) (*LoginR
 		Phone:       user.Phone.String,
 		Locale:      user.Locale,
 		Timezone:    user.Timezone,
-		Token:       token,
+		Token:       authResult.Token,
+		ExpiresAt:   authResult.ExpiresAt,
 	}
 
 	return response, nil
@@ -330,4 +334,36 @@ func (s *UserService) ResendVerificationEmail(ctx context.Context, req *ResendVe
 	}
 
 	return response, nil
+}
+
+// LogoutUser handles user logout by revoking the token
+func (s *UserService) LogoutUser(ctx context.Context, tokenString string) error {
+	if s.authClient == nil {
+		return fmt.Errorf("auth client not initialized")
+	}
+	return s.authClient.LogoutUser(ctx, tokenString)
+}
+
+// LogoutAllSessions logs out a user from all sessions
+func (s *UserService) LogoutAllSessions(ctx context.Context, userID uint64) error {
+	if s.authClient == nil {
+		return fmt.Errorf("auth client not initialized")
+	}
+	return s.authClient.LogoutAllSessions(ctx, userID)
+}
+
+// ValidateUserToken validates a user's token and returns user claims
+func (s *UserService) ValidateUserToken(ctx context.Context, tokenString string) (*UserClaims, error) {
+	if s.authClient == nil {
+		return nil, fmt.Errorf("auth client not initialized")
+	}
+	return s.authClient.ValidateToken(ctx, tokenString)
+}
+
+// RefreshUserToken refreshes a user's token
+func (s *UserService) RefreshUserToken(ctx context.Context, oldTokenString string) (*AuthResult, error) {
+	if s.authClient == nil {
+		return nil, fmt.Errorf("auth client not initialized")
+	}
+	return s.authClient.RefreshToken(ctx, oldTokenString)
 }

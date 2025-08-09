@@ -85,3 +85,20 @@ mail:
   from: "no_reply@gmail.com"
   # TLS mode: "mandatory" (STARTTLS), "opportunistic" (STARTTLS with fallback), "ssl" (SSL), "none" (NoTLS)
   tls_mode: "ssl"
+
+# JWT configuration
+jwt:
+  # JWT issuer
+  issuer: "circle-center"
+  # Token expiry time
+  expiry_time: "168h"
+  # RSA key size for JWT signing
+  rsa_key_size: 2048
+  # Directory to store JWT keys
+  keys_directory: "config/keys"
+  # Private key file name
+  private_key_file: "jwt_private.pem"
+  # Public key file name
+  public_key_file: "jwt_public.pem"
+  # Auto-generate keys if they don't exist
+  auto_generate: true

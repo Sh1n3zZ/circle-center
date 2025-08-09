@@ -7,6 +7,7 @@ import (
 
 	"circle-center/globals/mail"
 	op "circle-center/panel/account/operation"
+	"circle-center/panel/account/utils"
 )
 
 // RegisterRoutes registers all account-related routes
@@ -26,11 +27,22 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailServic
 		// User login
 		account.POST("/login", userHandler.LoginUser)
 
+		// User logout
+		account.POST("/logout", userHandler.LogoutUser)
+
+		// Token refresh
+		account.POST("/refresh", userHandler.RefreshToken)
+
 		// Resend verification email
 		account.POST("/resend-verification", userHandler.ResendVerificationEmail)
 
 		// Email verification (GET for email links if needed, POST for API calls)
 		// account.GET("/verify", verificationHandler.VerifyEmailByQuery)
 		account.POST("/verify", verificationHandler.VerifyEmail)
+
+		// Get user profile with middleware
+		account.GET("/protected/profile",
+			utils.ExtractBearerTokenMiddleware(),
+			userHandler.GetUserProfileWithMiddleware)
 	}
 }
