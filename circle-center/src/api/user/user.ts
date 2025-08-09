@@ -1,5 +1,12 @@
 import { post } from "../client";
-import type { RegisterRequest, RegisterResponse, LoginRequest, LoginResponse } from "./types";
+import type { 
+  RegisterRequest, 
+  RegisterResponse, 
+  LoginRequest, 
+  LoginResponse,
+  ResendVerificationEmailRequest,
+  ResendVerificationEmailResponse
+} from "./types";
 
 export const userApi = {
   /**
@@ -15,6 +22,14 @@ export const userApi = {
    */
   login: async (data: LoginRequest): Promise<LoginResponse> => {
     const response = await post<LoginResponse>("/account/login", data);
+    return response.data;
+  },
+
+  /**
+   * Resend verification email
+   */
+  resendVerificationEmail: async (data: ResendVerificationEmailRequest): Promise<ResendVerificationEmailResponse> => {
+    const response = await post<ResendVerificationEmailResponse>("/account/resend-verification", data);
     return response.data;
   },
 };

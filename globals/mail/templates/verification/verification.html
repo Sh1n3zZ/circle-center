@@ -8,115 +8,156 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
-            color: #333;
+            color: #171717;
             margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
+            padding: 20px;
+            background-color: #fafafa;
         }
         .container {
-            max-width: 600px;
+            max-width: 500px;
             margin: 0 auto;
             background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
             overflow: hidden;
-        }
-        .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 24px;
-            font-weight: 600;
+            border: 1px solid #e5e7eb;
         }
         .content {
             padding: 40px 30px;
         }
+        .logo-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: #000000;
+            margin-bottom: 8px;
+        }
+        .logo-subtitle {
+            font-size: 14px;
+            color: #525252;
+            font-weight: 400;
+        }
         .welcome-text {
             font-size: 18px;
             margin-bottom: 20px;
-            color: #2c3e50;
+            color: #171717;
+            font-weight: 500;
         }
         .description {
             font-size: 16px;
-            color: #7f8c8d;
+            color: #525252;
             margin-bottom: 30px;
             line-height: 1.8;
         }
-        .verification-section {
-            background-color: #f8f9fa;
-            border-radius: 6px;
-            padding: 25px;
+        .verification-card {
+            background-color: #fafafa;
+            border-radius: 8px;
+            padding: 30px;
             margin: 30px 0;
-            border-left: 4px solid #667eea;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .verification-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #171717;
+            margin-bottom: 15px;
+        }
+        .verification-description {
+            color: #525252;
+            margin-bottom: 25px;
+            font-size: 15px;
         }
         .verification-button {
             display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background-color: #000000;
             color: white;
             text-decoration: none;
-            padding: 12px 30px;
-            border-radius: 6px;
+            padding: 14px 32px;
+            border-radius: 8px;
             font-size: 16px;
-            font-weight: 600;
+            font-weight: 500;
             margin: 15px 0;
             text-align: center;
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
+            border: 1px solid #000000;
         }
         .verification-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+            background-color: #171717;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
         .verification-link {
             word-break: break-all;
-            color: #667eea;
+            color: #171717;
             text-decoration: none;
-            font-size: 14px;
-            background-color: #f1f3f4;
-            padding: 10px;
-            border-radius: 4px;
+            font-size: 13px;
+            background-color: #f5f5f5;
+            padding: 12px;
+            border-radius: 6px;
             display: block;
-            margin-top: 15px;
+            margin-top: 20px;
+            border: 1px solid #e5e7eb;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        .warning-card {
+            background-color: #f8f9fa;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 24px;
+            margin: 25px 0;
+            color: #374151;
+            border-left: 4px solid #6b7280;
+        }
+        .warning-title {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .warning-card ul {
+            margin: 8px 0;
+            padding-left: 20px;
+        }
+        .warning-card li {
+            margin-bottom: 8px;
+            line-height: 1.5;
         }
         .footer {
-            background-color: #f8f9fa;
-            padding: 20px 30px;
+            background-color: #fafafa;
+            padding: 25px 30px;
             text-align: center;
-            color: #7f8c8d;
-            font-size: 14px;
-        }
-        .warning {
-            background-color: #fff3cd;
-            border: 1px solid #ffeaa7;
-            border-radius: 4px;
-            padding: 15px;
-            margin: 20px 0;
-            color: #856404;
-        }
-        .warning strong {
-            color: #d63031;
+            color: #525252;
+            font-size: 13px;
+            border-top: 1px solid #e5e7eb;
         }
         @media only screen and (max-width: 600px) {
-            .container {
-                margin: 10px;
-                border-radius: 0;
+            body {
+                padding: 10px;
             }
-            .header, .content, .footer {
-                padding: 20px;
+            .container {
+                border-radius: 8px;
+            }
+            .content {
+                padding: 30px 20px;
+            }
+            .verification-card {
+                padding: 25px 20px;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1>Circle Center</h1>
-        </div>
-        
         <div class="content">
+            <div class="logo-section">
+                <div class="logo">Circle Center</div>
+                <div class="logo-subtitle">Email Verification</div>
+            </div>
+            
             <div class="welcome-text">
                 Dear {{.Email}},
             </div>
@@ -125,27 +166,27 @@
                 Thank you for registering Circle Center. To ensure the security of your account, please verify your email address.
             </div>
             
-            <div class="verification-section">
-                <h3 style="margin-top: 0; color: #2c3e50;">Verify your email</h3>
-                <p style="margin-bottom: 20px; color: #7f8c8d;">
+            <div class="verification-card">
+                <div class="verification-title">Verify your email</div>
+                <div class="verification-description">
                     Please click the button below to verify your email address:
-                </p>
+                </div>
 
-                <a href="{{.VerificationURL}}?token={{.Token}}&email={{.Email}}" class="verification-button">
+                <a href="{{.VerificationURL}}" class="verification-button">
                     Verify email address
                 </a>
 
-                <p style="margin: 20px 0 10px 0; color: #7f8c8d; font-size: 14px;">
+                <div style="margin: 20px 0 10px 0; color: #525252; font-size: 13px;">
                     If the button is not clickable, please copy the following link to your browser address bar:
-                </p>
-                <a href="{{.VerificationURL}}?token={{.Token}}&email={{.Email}}" class="verification-link">
-                    {{.VerificationURL}}?token={{.Token}}&email={{.Email}}
+                </div>
+                <a href="{{.VerificationURL}}" class="verification-link">
+                    {{.VerificationURL}}
                 </a>
             </div>
 
-            <div class="warning">
-                <strong>Security reminder:</strong>
-                <ul style="margin: 10px 0; padding-left: 20px;">
+            <div class="warning-card">
+                <div class="warning-title">Security reminder:</div>
+                <ul>
                     <li>This verification link will expire in 24 hours</li>
                     <li>Please do not share this link with others</li>
                     <li>If you did not register Circle Center, please ignore this email</li>

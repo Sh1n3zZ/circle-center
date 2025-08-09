@@ -20,6 +20,8 @@ export interface RegisterResponse {
     locale: string;
     timezone: string;
     created_at: string;
+    email_sent: boolean;
+    email_error?: string;
   };
 }
 
@@ -43,7 +45,36 @@ export interface LoginResponse {
   };
 }
 
+export interface ResendVerificationEmailRequest {
+  email: string;
+}
+
+export interface ResendVerificationEmailResponse {
+  success: boolean;
+  message: string;
+  data: {
+    email_sent: boolean;
+    email_error?: string;
+  };
+}
+
+export interface VerifyEmailRequest {
+  token: string;
+  email: string;
+}
+
+export interface VerifyEmailResponse {
+  success: boolean;
+  message: string;
+  data: {
+    success: boolean;
+    message: string;
+  };
+}
+
 export interface ApiError {
   error: string;
   message: string;
+  code?: string;
+  email?: string;
 }

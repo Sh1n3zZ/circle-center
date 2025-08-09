@@ -77,7 +77,7 @@ func main() {
 	v1 := r.Group("/v1")
 	reader.RegisterRoutes(v1)
 	editor.RegisterRoutes(v1)
-	account.RegisterRoutes(v1, dbpkg.GetDB().DB)
+	account.RegisterRoutes(v1, dbpkg.GetDB().DB, mailService)
 
 	serverAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Starting server on %s", serverAddr)

@@ -14,6 +14,11 @@ server:
   # Idle timeout for HTTP connections
   idle_timeout: "60s"
 
+# Frontend configuration
+frontend:
+  # Base URL for frontend application
+  base_url: "http://localhost:5173"
+
 # MySQL database configuration
 mysql:
   # MySQL server host
@@ -77,6 +82,6 @@ mail:
   # SMTP password (app password for Gmail)
   password: ""
   # From email address
-  from: "noreply@gmail.com"
+  from: "no_reply@gmail.com"
   # TLS mode: "mandatory" (STARTTLS), "opportunistic" (STARTTLS with fallback), "ssl" (SSL), "none" (NoTLS)
   tls_mode: "ssl"

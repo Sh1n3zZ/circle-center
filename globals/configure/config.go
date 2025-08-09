@@ -6,10 +6,11 @@ import (
 
 // Config represents the main application configuration
 type Config struct {
-	Server ServerConfig `yaml:"server"`
-	MySQL  MySQLConfig  `yaml:"mysql"`
-	Redis  RedisConfig  `yaml:"redis"`
-	Mail   MailConfig   `yaml:"mail"`
+	Server   ServerConfig   `yaml:"server"`
+	MySQL    MySQLConfig    `yaml:"mysql"`
+	Redis    RedisConfig    `yaml:"redis"`
+	Mail     MailConfig     `yaml:"mail"`
+	Frontend FrontendConfig `yaml:"frontend"`
 }
 
 // ServerConfig holds server configuration
@@ -62,6 +63,11 @@ type MailConfig struct {
 	TLSMode  string `yaml:"tls_mode"` // "mandatory" (STARTTLS), "opportunistic" (STARTTLS with fallback), "ssl" (SSL), "none" (NoTLS)
 }
 
+// FrontendConfig holds frontend configuration
+type FrontendConfig struct {
+	BaseURL string `yaml:"base_url"`
+}
+
 // DefaultConfig returns default configuration
 func DefaultConfig() *Config {
 	return &Config{
@@ -104,8 +110,11 @@ func DefaultConfig() *Config {
 			Port:     587,
 			Username: "",
 			Password: "",
-			From:     "noreply@gmail.com",
+			From:     "no_reply@gmail.com",
 			TLSMode:  "ssl",
+		},
+		Frontend: FrontendConfig{
+			BaseURL: "http://localhost:5173",
 		},
 	}
 }

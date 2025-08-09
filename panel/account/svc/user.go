@@ -11,16 +11,21 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 
+	configure "circle-center/globals/configure"
+	dbpkg "circle-center/globals/db"
+	"circle-center/globals/mail"
 	accountdb "circle-center/repository/sqlc/account"
 )
 
 type UserService struct {
-	queries *accountdb.Queries
+	queries     *accountdb.Queries
+	mailService *mail.MailService
 }
 
-func NewUserService(db *sql.DB) *UserService {
+func NewUserService(db *sql.DB, mailService *mail.MailService) *UserService {
 	return &UserService{
-		queries: accountdb.New(db),
+		queries:     accountdb.New(db),
+		mailService: mailService,
 	}
 }
 
@@ -45,6 +50,8 @@ type RegisterResponse struct {
 	Locale      string `json:"locale"`
 	Timezone    string `json:"timezone"`
 	CreatedAt   string `json:"created_at"`
+	EmailSent   bool   `json:"email_sent"`
+	EmailError  string `json:"email_error,omitempty"`
 }
 
 // LoginRequest represents the user login request
@@ -125,6 +132,19 @@ func (s *UserService) RegisterUser(ctx context.Context, req *RegisterRequest) (*
 		return nil, fmt.Errorf("failed to get created user: %w", err)
 	}
 
+	// Generate verification token
+	verificationToken, err := s.GenerateSecureToken(32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate verification token: %w", err)
+	}
+
+	// Store verification token in Redis with 24-hour expiration
+	tokenKey := fmt.Sprintf("verification_token:%s", verificationToken)
+	err = dbpkg.Set(ctx, tokenKey, user.Email, 24*time.Hour)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store verification token: %w", err)
+	}
+
 	// Build response
 	response := &RegisterResponse{
 		ID:          user.ID,
@@ -135,6 +155,20 @@ func (s *UserService) RegisterUser(ctx context.Context, req *RegisterRequest) (*
 		Locale:      user.Locale,
 		Timezone:    user.Timezone,
 		CreatedAt:   user.CreatedAt.Format(time.RFC3339),
+		EmailSent:   false,
+		EmailError:  "",
+	}
+
+	// Send verification email
+	if s.mailService != nil {
+		config := configure.GetConfig()
+		verificationURL := fmt.Sprintf("%s/login?verification=true&token=%s&email=%s", config.Frontend.BaseURL, verificationToken, user.Email)
+		err = s.mailService.SendVerificationEmail(user.Email, verificationToken, verificationURL)
+		if err != nil {
+			response.EmailError = err.Error()
+		} else {
+			response.EmailSent = true
+		}
 	}
 
 	return response, nil
@@ -150,7 +184,7 @@ func (s *UserService) LoginUser(ctx context.Context, req *LoginRequest) (*LoginR
 
 	// Check if account is active
 	if !user.Status {
-		return nil, fmt.Errorf("account is not active")
+		return nil, fmt.Errorf("account is not verified")
 	}
 
 	// Check if account is locked
@@ -238,4 +272,62 @@ func (s *UserService) GenerateSecureToken(length int) (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(bytes), nil
+}
+
+// ResendVerificationEmailRequest represents the resend verification email request
+type ResendVerificationEmailRequest struct {
+	Email string `json:"email" binding:"required,email"`
+}
+
+// ResendVerificationEmailResponse represents the resend verification email response
+type ResendVerificationEmailResponse struct {
+	EmailSent  bool   `json:"email_sent"`
+	EmailError string `json:"email_error,omitempty"`
+}
+
+// ResendVerificationEmail handles resending verification email
+func (s *UserService) ResendVerificationEmail(ctx context.Context, req *ResendVerificationEmailRequest) (*ResendVerificationEmailResponse, error) {
+	// Check if user exists
+	user, err := s.queries.GetUserByEmail(ctx, req.Email)
+	if err != nil {
+		return nil, fmt.Errorf("user not found")
+	}
+
+	// Check if user is already verified
+	if user.Status {
+		return nil, fmt.Errorf("user is already verified")
+	}
+
+	// Generate new verification token
+	verificationToken, err := s.GenerateSecureToken(32)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate verification token: %w", err)
+	}
+
+	// Store verification token in Redis with 24-hour expiration
+	tokenKey := fmt.Sprintf("verification_token:%s", verificationToken)
+	err = dbpkg.Set(ctx, tokenKey, user.Email, 24*time.Hour)
+	if err != nil {
+		return nil, fmt.Errorf("failed to store verification token: %w", err)
+	}
+
+	// Build response
+	response := &ResendVerificationEmailResponse{
+		EmailSent:  false,
+		EmailError: "",
+	}
+
+	// Send verification email
+	if s.mailService != nil {
+		config := configure.GetConfig()
+		verificationURL := fmt.Sprintf("%s/login?verification=true&token=%s&email=%s", config.Frontend.BaseURL, verificationToken, user.Email)
+		err = s.mailService.SendVerificationEmail(user.Email, verificationToken, verificationURL)
+		if err != nil {
+			response.EmailError = err.Error()
+		} else {
+			response.EmailSent = true
+		}
+	}
+
+	return response, nil
 }
