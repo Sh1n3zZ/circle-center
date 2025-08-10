@@ -7,8 +7,32 @@ import {
   navigationMenuTriggerStyle,
 } from '@/components/ui/navigation-menu'
 import { Button } from '@/components/ui/button'
+import { UserProfileNavBubble } from '@/components/user/UserProfileNavBubble'
+import { authHelpers } from '@/api/client'
 
 const Header = () => {
+  const isAuthenticated = authHelpers.isAuthenticated()
+  const currentUser = authHelpers.getCurrentUser<{
+    display_name?: string
+    username?: string
+    avatar_url?: string
+  }>()
+
+  const handleEditProfile = () => {
+    // TODO: Navigate to profile edit page
+    console.log('Edit profile clicked')
+  }
+
+  const handleLogout = async () => {
+    try {
+      await authHelpers.clearAuthData()
+      // Redirect to login page or refresh the page
+      window.location.href = '/login'
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
+  }
+
   return (
     <header className="sticky top-0 z-40 w-screen backdrop-blur-md bg-white/70 dark:bg-gray-900/70 border-b border-border">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 md:px-8 py-3">
@@ -47,13 +71,26 @@ const Header = () => {
           </NavigationMenuList>
         </NavigationMenu>
 
+        {/* User Actions */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" asChild>
-            <Link to="/login">Login</Link>
-          </Button>
-          <Button asChild>
-            <Link to="/login?tab=register">Register</Link>
-          </Button>
+          {isAuthenticated ? (
+            <UserProfileNavBubble
+              displayName={currentUser?.display_name || currentUser?.username}
+              avatarPath={currentUser?.avatar_url}
+              size={36}
+              onEditProfile={handleEditProfile}
+              onLogout={handleLogout}
+            />
+          ) : (
+            <>
+              <Button variant="outline" asChild>
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild>
+                <Link to="/login?tab=register">Register</Link>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </header>

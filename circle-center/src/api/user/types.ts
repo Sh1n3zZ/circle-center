@@ -41,6 +41,7 @@ export interface LoginResponse {
     phone?: string;
     locale: string;
     timezone: string;
+    avatar_url?: string;
     token?: string;
     expires_at?: number;
   };
@@ -70,6 +71,15 @@ export interface VerifyEmailResponse {
   data: {
     success: boolean;
     message: string;
+  };
+}
+
+export interface UploadAvatarResponse {
+  success: boolean;
+  message: string;
+  data: {
+    path: string;
+    url: string;
   };
 }
 

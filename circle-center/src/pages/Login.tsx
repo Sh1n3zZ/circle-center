@@ -9,6 +9,7 @@ import { UserAccountInactiveDialog } from "@/components/user/UserAccountInactive
 import { UserRegisterEmailVerification } from "@/components/user/UserRegisterEmailVerification"
 import { UserRegisterEmailVerificationSuccessful } from "@/components/user/UserRegisterEmailVerificationSuccessful"
 import { userApi } from "@/api/user/user"
+import { authHelpers } from "@/api/client"
 
 export default function Login() {
   const [isLoading, setIsLoading] = useState(false)
@@ -36,9 +37,25 @@ export default function Login() {
         password: data.password,
       })
       
-      // Store token if provided
-      if (response.data.token) {
-        localStorage.setItem("token", response.data.token)
+      if (response.data.token && response.data.expires_at) {
+        const success = await authHelpers.storeAuthData(
+          response.data.token,
+          response.data.expires_at,
+          {
+            id: response.data.id,
+            username: response.data.username,
+            email: response.data.email,
+            display_name: response.data.display_name,
+            phone: response.data.phone,
+            locale: response.data.locale,
+            timezone: response.data.timezone,
+            avatar_url: response.data.avatar_url,
+          }
+        )
+        
+        if (!success) {
+          throw new Error("Failed to store authentication data")
+        }
       }
       
       toast.success(response.message || "Login successful!")

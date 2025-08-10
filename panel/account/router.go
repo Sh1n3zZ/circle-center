@@ -7,6 +7,7 @@ import (
 
 	"circle-center/globals/mail"
 	op "circle-center/panel/account/operation"
+	svc "circle-center/panel/account/svc"
 	"circle-center/panel/account/utils"
 )
 
@@ -14,6 +15,17 @@ import (
 func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailService) {
 	userHandler := op.NewUserHandler(db, mailService)
 	verificationHandler := op.NewVerificationHandler(db)
+	// avatar services and handler
+	jwtClient, err := svc.NewJWTClientFromGlobalKeys()
+	if err != nil {
+		panic("Failed to create JWT client from global keys: " + err.Error())
+	}
+	authClient := svc.NewAuthClient(jwtClient)
+	avatarService, err := svc.NewAvatarService(db, authClient)
+	if err != nil {
+		panic("Failed to create AvatarService: " + err.Error())
+	}
+	avatarHandler := op.NewAvatarHandler(avatarService)
 
 	// Account routes
 	account := r.Group("/account")
@@ -41,8 +53,17 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailServic
 		account.POST("/verify", verificationHandler.VerifyEmail)
 
 		// Get user profile with middleware
-		account.GET("/protected/profile",
+		account.GET("/profile",
 			utils.ExtractBearerTokenMiddleware(),
 			userHandler.GetUserProfileWithMiddleware)
+
+		// Avatar upload (protected)
+		account.POST("/avatar",
+			utils.ExtractBearerTokenMiddleware(),
+			avatarHandler.UploadAvatar)
+
+		// Avatar public get by relative path wildcard
+		// Example: GET /v1/account/avatar/avatars/2025/08/uuid_xxx.jpg?size=256&quality=85
+		account.GET("/avatar/*relpath", avatarHandler.GetAvatar)
 	}
 }

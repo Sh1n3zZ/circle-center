@@ -71,6 +71,7 @@ type LoginResponse struct {
 	Phone       string `json:"phone,omitempty"`
 	Locale      string `json:"locale"`
 	Timezone    string `json:"timezone"`
+	AvatarUrl   string `json:"avatar_url,omitempty"`
 	Token       string `json:"token,omitempty"`
 	ExpiresAt   int64  `json:"expires_at,omitempty"`
 }
@@ -235,6 +236,7 @@ func (s *UserService) LoginUser(ctx context.Context, req *LoginRequest) (*LoginR
 		Phone:       user.Phone.String,
 		Locale:      user.Locale,
 		Timezone:    user.Timezone,
+		AvatarUrl:   user.AvatarUrl.String,
 		Token:       authResult.Token,
 		ExpiresAt:   authResult.ExpiresAt,
 	}

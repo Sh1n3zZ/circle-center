@@ -12,6 +12,7 @@ type Config struct {
 	Mail     MailConfig     `yaml:"mail"`
 	Frontend FrontendConfig `yaml:"frontend"`
 	JWT      JWTConfig      `yaml:"jwt"`
+	Avatar   AvatarConfig   `yaml:"avatar"`
 }
 
 // ServerConfig holds server configuration
@@ -67,6 +68,14 @@ type MailConfig struct {
 // FrontendConfig holds frontend configuration
 type FrontendConfig struct {
 	BaseURL string `yaml:"base_url"`
+}
+
+// AvatarConfig holds avatar related configuration
+type AvatarConfig struct {
+	// Maximum allowed avatar upload size in bytes
+	MaxUploadBytes int64 `yaml:"max_upload_bytes"`
+	// Maximum image quality allowed when processing/returning images (1-100)
+	MaxImageQuality int `yaml:"max_image_quality"`
 }
 
 // JWTConfig holds JWT configuration
@@ -127,6 +136,10 @@ func DefaultConfig() *Config {
 		},
 		Frontend: FrontendConfig{
 			BaseURL: "http://localhost:5173",
+		},
+		Avatar: AvatarConfig{
+			MaxUploadBytes:  2 * 1024 * 1024, // 2MB
+			MaxImageQuality: 90,
 		},
 		JWT: JWTConfig{
 			Issuer:         "circle-center",

@@ -19,6 +19,13 @@ frontend:
   # Base URL for frontend application
   base_url: "http://localhost:5173"
 
+# Avatar configuration
+avatar:
+  # Maximum avatar upload size in bytes (default 2MB)
+  max_upload_bytes: 2097152
+  # Maximum allowed image quality when returning processed images (1-100)
+  max_image_quality: 90
+
 # MySQL database configuration
 mysql:
   # MySQL server host
