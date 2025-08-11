@@ -1,6 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { User, Shield, Settings } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export type ProfileTab = "profile" | "security";
 
@@ -40,8 +41,9 @@ export const UserProfileSideBar: React.FC<UserProfileSideBarProps> = ({
   ];
 
   return (
-    <div className={cn("w-64 bg-white border-r border-gray-200", className)}>
-      <div className="p-6">
+    <div className={cn("w-64 h-screen bg-white border-r border-gray-200 shrink-0", className)}>
+      <ScrollArea className="h-full">
+        <div className="p-6">
         <div className="flex items-center space-x-3 mb-6">
           <Settings className="w-6 h-6 text-gray-600" />
           <h2 className="text-lg font-semibold text-gray-900">Account Settings</h2>
@@ -77,7 +79,8 @@ export const UserProfileSideBar: React.FC<UserProfileSideBarProps> = ({
             </button>
           ))}
         </nav>
-      </div>
+        </div>
+      </ScrollArea>
     </div>
   );
 };

@@ -23,7 +23,7 @@ const Profile: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex">
+      <div className="flex h-[calc(100vh-0px)] min-h-0">
         {/* Sidebar */}
         <UserProfileSideBar
           activeTab={activeTab}
@@ -31,7 +31,7 @@ const Profile: React.FC = () => {
         />
         
         {/* Main Content */}
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           {renderContent()}
         </div>
       </div>

@@ -3,6 +3,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Pencil } from "lucide-react";
 import { avatarApi } from "@/api/user/avatar";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { toast } from "sonner";
 
 interface UserProfileAvatarProps {
@@ -142,7 +143,7 @@ export const UserProfileAvatar: React.FC<UserProfileAvatarProps> = ({
               className="absolute inset-0 w-full h-full rounded-full p-0 bg-black/20 hover:bg-black/30 transition-all duration-200 opacity-0 hover:opacity-100 group cursor-pointer"
             >
             {isUploading ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
+              <LoadingSpinner size={24} className="text-white" />
                          ) : (
                <div className="flex items-center justify-center text-white">
                  <Pencil className="w-5 h-5" />

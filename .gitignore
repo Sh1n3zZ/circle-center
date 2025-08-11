@@ -34,5 +34,8 @@ go.work.sum
 # Config file
 config/config.yaml
 
+# Storage file
+storage/
+
 # JWT keys
 config/keys/

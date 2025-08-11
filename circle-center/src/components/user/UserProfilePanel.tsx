@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { UserProfileAvatar } from "./UserProfileAvatar";
 import { profileApi } from "@/api/user/profile";
 import { toast } from "sonner";
+import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import type { GetUserProfileResponse, UpdateUserProfileRequest } from "@/api/user/types";
 import jstz from "jstz";
 
@@ -120,7 +121,7 @@ export const UserProfilePanel: React.FC<UserProfilePanelProps> = ({ className })
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-center py-8">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <LoadingSpinner size={32} className="text-gray-900" />
           </div>
         </CardContent>
       </Card>
