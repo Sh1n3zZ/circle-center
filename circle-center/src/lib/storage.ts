@@ -164,10 +164,9 @@ export class SecureStorage {
 export class AuthStorage {
   private storage: SecureStorage;
   
-  // Storage keys for authentication data
+  // Storage keys for authentication data - only token related
   private static readonly AUTH_TOKEN_KEY = 'auth_token';
   private static readonly AUTH_EXPIRES_AT_KEY = 'auth_expires_at';
-  private static readonly USER_INFO_KEY = 'user_info';
   private static readonly REFRESH_TOKEN_KEY = 'refresh_token';
 
   constructor() {
@@ -232,21 +231,7 @@ export class AuthStorage {
     return thresholdFromNow > expiresAt * 1000;
   }
 
-  /**
-   * Store user information
-   * @param userInfo - User information object
-   */
-  public async setUserInfo(userInfo: object): Promise<boolean> {
-    return await this.storage.setItem(AuthStorage.USER_INFO_KEY, userInfo);
-  }
 
-  /**
-   * Get user information
-   * @returns object | null - The stored user info or null if not found
-   */
-  public getUserInfo<T = object>(): T | null {
-    return this.storage.getItem<T>(AuthStorage.USER_INFO_KEY);
-  }
 
   /**
    * Store refresh token (if using refresh token strategy)
@@ -285,7 +270,6 @@ export class AuthStorage {
     const results = await Promise.all([
       this.storage.removeItem(AuthStorage.AUTH_TOKEN_KEY),
       this.storage.removeItem(AuthStorage.AUTH_EXPIRES_AT_KEY),
-      this.storage.removeItem(AuthStorage.USER_INFO_KEY),
       this.storage.removeItem(AuthStorage.REFRESH_TOKEN_KEY),
     ]);
     

@@ -186,20 +186,16 @@ export const get = <T = any>(url: string, config?: RequestOptions) =>
 export const post = <T = any>(url: string, data?: any, config?: RequestOptions) =>
   request<T>({ url, method: "POST", data, ...config });
 
+export const put = <T = any>(url: string, data?: any, config?: RequestOptions) =>
+  request<T>({ url, method: "PUT", data, ...config });
+
 // Authentication helper functions
 export const authHelpers = {
   /**
    * Store authentication data after successful login
    */
-  async storeAuthData(token: string, expiresAt: number, userInfo?: any): Promise<boolean> {
-    const tokenStored = await authStorage.setAuthToken(token, expiresAt);
-    
-    if (userInfo) {
-      const userInfoStored = await authStorage.setUserInfo(userInfo);
-      return tokenStored && userInfoStored;
-    }
-    
-    return tokenStored;
+  async storeAuthData(token: string, expiresAt: number): Promise<boolean> {
+    return await authStorage.setAuthToken(token, expiresAt);
   },
 
   /**
@@ -214,13 +210,6 @@ export const authHelpers = {
    */
   isAuthenticated(): boolean {
     return authStorage.isAuthenticated();
-  },
-
-  /**
-   * Get current user info
-   */
-  getCurrentUser<T = any>(): T | null {
-    return authStorage.getUserInfo<T>();
   },
 
   /**

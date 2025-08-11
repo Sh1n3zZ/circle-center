@@ -40,17 +40,7 @@ export default function Login() {
       if (response.data.token && response.data.expires_at) {
         const success = await authHelpers.storeAuthData(
           response.data.token,
-          response.data.expires_at,
-          {
-            id: response.data.id,
-            username: response.data.username,
-            email: response.data.email,
-            display_name: response.data.display_name,
-            phone: response.data.phone,
-            locale: response.data.locale,
-            timezone: response.data.timezone,
-            avatar_url: response.data.avatar_url,
-          }
+          response.data.expires_at
         )
         
         if (!success) {

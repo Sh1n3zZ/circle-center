@@ -288,38 +288,6 @@ func (h *UserHandler) RefreshToken(c *gin.Context) {
 	})
 }
 
-// GetUserProfileWithMiddleware shows how to use middleware for token extraction
-// This is an alternative implementation that uses middleware
-func (h *UserHandler) GetUserProfileWithMiddleware(c *gin.Context) {
-	tokenString, exists := utils.GetTokenFromContext(c)
-	if !exists {
-		c.JSON(http.StatusInternalServerError, ErrorResponse{
-			Error:   "Token not found in context",
-			Message: "Middleware token extraction failed",
-		})
-		return
-	}
-
-	userClaims, err := h.userService.ValidateUserToken(c.Request.Context(), tokenString)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, ErrorResponse{
-			Error:   "Token validation failed",
-			Message: err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"success": true,
-		"message": "User profile retrieved successfully (via middleware)",
-		"data": gin.H{
-			"user_id":  userClaims.UserID,
-			"username": userClaims.Username,
-			"email":    userClaims.Email,
-		},
-	})
-}
-
 // ErrorResponse represents an error response
 type ErrorResponse struct {
 	Error   string `json:"error"`

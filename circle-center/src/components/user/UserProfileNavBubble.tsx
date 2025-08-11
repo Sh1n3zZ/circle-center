@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, LogOut } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,10 +24,6 @@ interface UserProfileNavBubbleProps {
    */
   size?: number;
   /**
-   * Callback for edit profile action
-   */
-  onEditProfile?: () => void;
-  /**
    * Callback for logout action
    */
   onLogout?: () => void;
@@ -39,17 +37,17 @@ export const UserProfileNavBubble: React.FC<UserProfileNavBubbleProps> = ({
   displayName,
   avatarPath,
   size = 32,
-  onEditProfile,
   onLogout,
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className={`rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 hover:scale-105 ${className}`}
+          className={`rounded-full focus:outline-none transition-transform duration-150 active:scale-95 ${className}`}
           aria-label={`${displayName || "User"} profile menu`}
         >
           <UserProfileAvatar
@@ -76,22 +74,13 @@ export const UserProfileNavBubble: React.FC<UserProfileNavBubbleProps> = ({
         </div>
         
         <DropdownMenuItem
-          onClick={onEditProfile}
+          onClick={() => {
+            navigate("/profile");
+            setIsOpen(false);
+          }}
           className="cursor-pointer focus:bg-gray-50"
         >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-            />
-          </svg>
+          <User className="w-4 h-4 mr-2" />
           Edit Profile
         </DropdownMenuItem>
         
@@ -101,19 +90,7 @@ export const UserProfileNavBubble: React.FC<UserProfileNavBubbleProps> = ({
           onClick={onLogout}
           className="cursor-pointer focus:bg-gray-50 text-red-600 focus:text-red-700"
         >
-          <svg
-            className="w-4 h-4 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-            />
-          </svg>
+          <LogOut className="w-4 h-4 mr-2" />
           Sign Out
         </DropdownMenuItem>
       </DropdownMenuContent>

@@ -83,6 +83,46 @@ export interface UploadAvatarResponse {
   };
 }
 
+export interface GetUserProfileResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: number;
+    username: string;
+    email: string;
+    display_name?: string;
+    phone?: string;
+    locale: string;
+    timezone: string;
+    avatar_url?: string;
+    created_at: string;
+    updated_at: string;
+  };
+}
+
+export interface UpdateUserProfileRequest {
+  display_name?: string;
+  phone?: string;
+  locale?: string;
+  timezone?: string;
+}
+
+export interface UpdateUserProfileResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: number;
+    username: string;
+    email: string;
+    display_name?: string;
+    phone?: string;
+    locale: string;
+    timezone: string;
+    avatar_url?: string;
+    updated_at: string;
+  };
+}
+
 export interface ApiError {
   error: string;
   message: string;

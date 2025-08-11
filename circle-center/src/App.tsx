@@ -5,6 +5,7 @@ import './App.css'
 import Home from './pages/Home'
 import Reader from './pages/Reader'
 import Login from './pages/Login'
+import Profile from './pages/profile/Profile'
 
 const About = () => (
   <div className="p-4 text-center">
@@ -24,6 +25,7 @@ function App() {
             <Route path="/about" element={<About />} />
             <Route path="/reader" element={<Reader />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
 

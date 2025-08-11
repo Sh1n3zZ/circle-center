@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { useState, useEffect } from 'react'
 import {
   NavigationMenu,
   NavigationMenuList,
@@ -9,24 +10,36 @@ import {
 import { Button } from '@/components/ui/button'
 import { UserProfileNavBubble } from '@/components/user/UserProfileNavBubble'
 import { authHelpers } from '@/api/client'
+import { profileApi } from '@/api/user/profile'
 
 const Header = () => {
   const isAuthenticated = authHelpers.isAuthenticated()
-  const currentUser = authHelpers.getCurrentUser<{
+  const [currentUser, setCurrentUser] = useState<{
     display_name?: string
     username?: string
     avatar_url?: string
-  }>()
+  } | null>(null)
 
-  const handleEditProfile = () => {
-    // TODO: Navigate to profile edit page
-    console.log('Edit profile clicked')
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      profileApi.getUserProfile()
+        .then(response => {
+          setCurrentUser(response.data)
+        })
+        .catch(error => {
+          console.error('Failed to load user profile:', error)
+        })
+    } else {
+      setCurrentUser(null)
+    }
+  }, [isAuthenticated])
+
+
 
   const handleLogout = async () => {
     try {
       await authHelpers.clearAuthData()
-      // Redirect to login page or refresh the page
+      // redirect to login page or refresh the page
       window.location.href = '/login'
     } catch (error) {
       console.error('Logout failed:', error)
@@ -78,7 +91,6 @@ const Header = () => {
               displayName={currentUser?.display_name || currentUser?.username}
               avatarPath={currentUser?.avatar_url}
               size={36}
-              onEditProfile={handleEditProfile}
               onLogout={handleLogout}
             />
           ) : (

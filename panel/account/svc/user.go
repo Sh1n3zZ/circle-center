@@ -354,14 +354,6 @@ func (s *UserService) LogoutAllSessions(ctx context.Context, userID uint64) erro
 	return s.authClient.LogoutAllSessions(ctx, userID)
 }
 
-// ValidateUserToken validates a user's token and returns user claims
-func (s *UserService) ValidateUserToken(ctx context.Context, tokenString string) (*UserClaims, error) {
-	if s.authClient == nil {
-		return nil, fmt.Errorf("auth client not initialized")
-	}
-	return s.authClient.ValidateToken(ctx, tokenString)
-}
-
 // RefreshUserToken refreshes a user's token
 func (s *UserService) RefreshUserToken(ctx context.Context, oldTokenString string) (*AuthResult, error) {
 	if s.authClient == nil {

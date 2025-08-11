@@ -15,6 +15,8 @@ import (
 func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailService) {
 	userHandler := op.NewUserHandler(db, mailService)
 	verificationHandler := op.NewVerificationHandler(db)
+	profileHandler := op.NewProfileHandler(db, mailService)
+
 	// avatar services and handler
 	jwtClient, err := svc.NewJWTClientFromGlobalKeys()
 	if err != nil {
@@ -52,11 +54,16 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailServic
 		// account.GET("/verify", verificationHandler.VerifyEmailByQuery)
 		account.POST("/verify", verificationHandler.VerifyEmail)
 
-		// Get user profile with middleware
+		// Profile routes (protected)
 		account.GET("/profile",
 			utils.ExtractBearerTokenMiddleware(),
-			userHandler.GetUserProfileWithMiddleware)
+			profileHandler.GetUserProfile)
 
+		account.PUT("/profile",
+			utils.ExtractBearerTokenMiddleware(),
+			profileHandler.UpdateUserProfile)
+
+		// Avatar routes
 		// Avatar upload (protected)
 		account.POST("/avatar",
 			utils.ExtractBearerTokenMiddleware(),
