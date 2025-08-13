@@ -30,12 +30,13 @@ go.work.sum
 # Editor/IDE
 # .idea/
 .vscode/
-
-# Config file
-config/config.yaml
+.cursor/
 
 # Storage file
 storage/
+
+# Config file
+config/config.yaml
 
 # JWT keys
 config/keys/

@@ -2,7 +2,7 @@
 // versions:
 //   sqlc v1.29.0
 
-package account
+package manager
 
 import (
 	"database/sql"

@@ -12,17 +12,12 @@ import (
 )
 
 // RegisterRoutes registers all account-related routes
-func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailService) {
+func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, mailService *mail.MailService, authClient *svc.AuthClient) {
 	userHandler := op.NewUserHandler(db, mailService)
 	verificationHandler := op.NewVerificationHandler(db)
 	profileHandler := op.NewProfileHandler(db, mailService)
 
 	// avatar services and handler
-	jwtClient, err := svc.NewJWTClientFromGlobalKeys()
-	if err != nil {
-		panic("Failed to create JWT client from global keys: " + err.Error())
-	}
-	authClient := svc.NewAuthClient(jwtClient)
 	avatarService, err := svc.NewAvatarService(db, authClient)
 	if err != nil {
 		panic("Failed to create AvatarService: " + err.Error())

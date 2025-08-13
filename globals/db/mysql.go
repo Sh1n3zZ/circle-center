@@ -39,6 +39,15 @@ func convertPathToURL(path string) string {
 	return strings.ReplaceAll(path, "\\", "/")
 }
 
+// getMigrationTableName builds a per-subdirectory migrations table name
+// This isolates versions between folders to avoid version number collisions
+func getMigrationTableName(dirName string) string {
+	// MySQL table names commonly allow letters, numbers, and underscores.
+	// Replace path separators just in case and normalize to underscores.
+	safe := strings.NewReplacer("/", "_", "\\", "_").Replace(dirName)
+	return "schema_migrations_" + safe
+}
+
 // ConnectMySQL establishes a connection to MySQL database
 func ConnectMySQL(config *MySQLConfig) error {
 	if config == nil {
@@ -113,10 +122,6 @@ func RunMigrations(migrationsPath string) error {
 	}
 
 	sqlDB := DB.DB
-	driver, err := mysql.WithInstance(sqlDB, &mysql.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to create MySQL driver: %w", err)
-	}
 
 	entries, err := os.ReadDir(migrationsPath)
 	if err != nil {
@@ -149,6 +154,14 @@ func RunMigrations(migrationsPath string) error {
 			continue
 		}
 
+		// use an isolated migrations table per subdirectory
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{MigrationsTable: getMigrationTableName(entry.Name())})
+		if err != nil {
+			slog.Warn("Failed to create MySQL driver for subdirectory",
+				"path", subDirPath, "error", err)
+			continue
+		}
+
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", convertPathToURL(subDirPath)),
 			"mysql",
@@ -160,12 +173,18 @@ func RunMigrations(migrationsPath string) error {
 			continue
 		}
 
-		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-			slog.Warn("Failed to run migrations for subdirectory",
-				"path", subDirPath, "error", err)
+		if err := m.Up(); err != nil {
+			if err == migrate.ErrNoChange {
+				slog.Info("No changes for subdirectory",
+					"path", subDirPath, "migrations_table", getMigrationTableName(entry.Name()))
+			} else {
+				slog.Warn("Failed to run migrations for subdirectory",
+					"path", subDirPath, "error", err, "migrations_table", getMigrationTableName(entry.Name()))
+			}
 		} else {
 			totalMigrations++
-			slog.Info("Successfully ran migrations for subdirectory", "path", subDirPath)
+			slog.Info("Applied migrations for subdirectory",
+				"path", subDirPath, "migrations_table", getMigrationTableName(entry.Name()))
 		}
 	}
 
@@ -183,6 +202,12 @@ func RunMigrations(migrationsPath string) error {
 	}
 
 	if hasRootMigrations {
+		// Isolate root-level migrations as well
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{MigrationsTable: getMigrationTableName("root")})
+		if err != nil {
+			return fmt.Errorf("failed to create MySQL driver for root directory: %w", err)
+		}
+
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", convertPathToURL(migrationsPath)),
 			"mysql",
@@ -191,12 +216,16 @@ func RunMigrations(migrationsPath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create migrate instance for root directory: %w", err)
 		}
-		defer m.Close()
 
-		if err := m.Up(); err != nil && err != migrate.ErrNoChange {
-			return fmt.Errorf("failed to run migrations: %w", err)
+		if err := m.Up(); err != nil {
+			if err == migrate.ErrNoChange {
+				slog.Info("No changes for root migrations", "migrations_table", getMigrationTableName("root"))
+			} else {
+				return fmt.Errorf("failed to run migrations: %w", err)
+			}
+		} else {
+			totalMigrations++
 		}
-		totalMigrations++
 	}
 
 	if totalMigrations == 0 {
@@ -227,10 +256,6 @@ func RollbackMigrations(migrationsPath string) error {
 	}
 
 	sqlDB := DB.DB
-	driver, err := mysql.WithInstance(sqlDB, &mysql.Config{})
-	if err != nil {
-		return fmt.Errorf("failed to create MySQL driver: %w", err)
-	}
 
 	entries, err := os.ReadDir(migrationsPath)
 	if err != nil {
@@ -263,6 +288,13 @@ func RollbackMigrations(migrationsPath string) error {
 			continue
 		}
 
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{MigrationsTable: getMigrationTableName(entry.Name())})
+		if err != nil {
+			slog.Warn("Failed to create MySQL driver for subdirectory",
+				"path", subDirPath, "error", err)
+			continue
+		}
+
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", convertPathToURL(subDirPath)),
 			"mysql",
@@ -275,11 +307,17 @@ func RollbackMigrations(migrationsPath string) error {
 		}
 
 		if err := m.Steps(-1); err != nil {
-			slog.Warn("Failed to rollback migrations for subdirectory",
-				"path", subDirPath, "error", err)
+			if err == migrate.ErrNoChange {
+				slog.Info("No migrations to rollback for subdirectory",
+					"path", subDirPath, "migrations_table", getMigrationTableName(entry.Name()))
+			} else {
+				slog.Warn("Failed to rollback migrations for subdirectory",
+					"path", subDirPath, "error", err, "migrations_table", getMigrationTableName(entry.Name()))
+			}
 		} else {
 			totalRollbacks++
-			slog.Info("Successfully rolled back migrations for subdirectory", "path", subDirPath)
+			slog.Info("Rolled back one step for subdirectory",
+				"path", subDirPath, "migrations_table", getMigrationTableName(entry.Name()))
 		}
 	}
 
@@ -297,6 +335,11 @@ func RollbackMigrations(migrationsPath string) error {
 	}
 
 	if hasRootMigrations {
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{MigrationsTable: getMigrationTableName("root")})
+		if err != nil {
+			return fmt.Errorf("failed to create MySQL driver for root directory: %w", err)
+		}
+
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", convertPathToURL(migrationsPath)),
 			"mysql",
@@ -305,12 +348,16 @@ func RollbackMigrations(migrationsPath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to create migrate instance for root directory: %w", err)
 		}
-		defer m.Close()
 
 		if err := m.Steps(-1); err != nil {
-			return fmt.Errorf("failed to rollback migrations: %w", err)
+			if err == migrate.ErrNoChange {
+				slog.Info("No migrations to rollback for root", "migrations_table", getMigrationTableName("root"))
+			} else {
+				return fmt.Errorf("failed to rollback migrations: %w", err)
+			}
+		} else {
+			totalRollbacks++
 		}
-		totalRollbacks++
 	}
 
 	if totalRollbacks == 0 {
@@ -338,10 +385,6 @@ func GetMigrationVersion(migrationsPath string) (uint, error) {
 	}
 
 	sqlDB := DB.DB
-	driver, err := mysql.WithInstance(sqlDB, &mysql.Config{})
-	if err != nil {
-		return 0, fmt.Errorf("failed to create MySQL driver: %w", err)
-	}
 
 	entries, err := os.ReadDir(migrationsPath)
 	if err != nil {
@@ -374,6 +417,13 @@ func GetMigrationVersion(migrationsPath string) (uint, error) {
 			continue
 		}
 
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{MigrationsTable: getMigrationTableName(entry.Name())})
+		if err != nil {
+			slog.Warn("Failed to create MySQL driver for subdirectory",
+				"path", subDirPath, "error", err)
+			continue
+		}
+
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", convertPathToURL(subDirPath)),
 			"mysql",
@@ -387,8 +437,13 @@ func GetMigrationVersion(migrationsPath string) (uint, error) {
 
 		version, dirty, err := m.Version()
 		if err != nil {
-			slog.Warn("Failed to get migration version for subdirectory",
-				"path", subDirPath, "error", err)
+			if err == migrate.ErrNilVersion {
+				slog.Info("No migration version found for subdirectory",
+					"path", subDirPath, "migrations_table", getMigrationTableName(entry.Name()))
+			} else {
+				slog.Warn("Failed to get migration version for subdirectory",
+					"path", subDirPath, "error", err)
+			}
 		} else {
 			if dirty {
 				return version, fmt.Errorf("database is in dirty state at version %d in subdirectory %s", version, subDirPath)
@@ -411,6 +466,11 @@ func GetMigrationVersion(migrationsPath string) (uint, error) {
 	}
 
 	if hasRootMigrations {
+		driver, err := mysql.WithInstance(sqlDB, &mysql.Config{MigrationsTable: getMigrationTableName("root")})
+		if err != nil {
+			return 0, fmt.Errorf("failed to create MySQL driver for root directory: %w", err)
+		}
+
 		m, err := migrate.NewWithDatabaseInstance(
 			fmt.Sprintf("file://%s", convertPathToURL(migrationsPath)),
 			"mysql",
@@ -419,18 +479,20 @@ func GetMigrationVersion(migrationsPath string) (uint, error) {
 		if err != nil {
 			return 0, fmt.Errorf("failed to create migrate instance for root directory: %w", err)
 		}
-		defer m.Close()
 
 		version, dirty, err := m.Version()
 		if err != nil {
-			return 0, fmt.Errorf("failed to get migration version: %w", err)
+			if err == migrate.ErrNilVersion {
+				slog.Info("No migration version found for root", "migrations_table", getMigrationTableName("root"))
+			} else {
+				return 0, fmt.Errorf("failed to get migration version: %w", err)
+			}
+		} else {
+			if dirty {
+				return version, fmt.Errorf("database is in dirty state at version %d", version)
+			}
+			totalVersions += version
 		}
-
-		if dirty {
-			return version, fmt.Errorf("database is in dirty state at version %d", version)
-		}
-
-		totalVersions += version
 	}
 
 	return totalVersions, nil

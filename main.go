@@ -9,6 +9,8 @@ import (
 	dbpkg "circle-center/globals/db"
 	"circle-center/globals/mail"
 	"circle-center/panel/account"
+	accountsvc "circle-center/panel/account/svc"
+	mgr "circle-center/panel/manager"
 	editor "circle-center/processor"
 	"circle-center/reader"
 )
@@ -20,17 +22,18 @@ func main() {
 	}
 
 	if err := dbpkg.ConnectMySQL(&dbpkg.MySQLConfig{
-		Host:         cfg.MySQL.Host,
-		Port:         cfg.MySQL.Port,
-		Username:     cfg.MySQL.Username,
-		Password:     cfg.MySQL.Password,
-		Database:     cfg.MySQL.Database,
-		Charset:      cfg.MySQL.Charset,
-		ParseTime:    cfg.MySQL.ParseTime,
-		Loc:          cfg.MySQL.Loc,
-		MaxOpenConns: cfg.MySQL.MaxOpenConns,
-		MaxIdleConns: cfg.MySQL.MaxIdleConns,
-		MaxLifetime:  cfg.MySQL.MaxLifetime,
+		Host:           cfg.MySQL.Host,
+		Port:           cfg.MySQL.Port,
+		Username:       cfg.MySQL.Username,
+		Password:       cfg.MySQL.Password,
+		Database:       cfg.MySQL.Database,
+		Charset:        cfg.MySQL.Charset,
+		ParseTime:      cfg.MySQL.ParseTime,
+		Loc:            cfg.MySQL.Loc,
+		MaxOpenConns:   cfg.MySQL.MaxOpenConns,
+		MaxIdleConns:   cfg.MySQL.MaxIdleConns,
+		MaxLifetime:    cfg.MySQL.MaxLifetime,
+		MultiStatement: cfg.MySQL.MultiStatement,
 	}); err != nil {
 		log.Fatalf("Failed to connect to MySQL: %v", err)
 	}
@@ -76,12 +79,19 @@ func main() {
 		}
 	}
 
+	jwtClient, err := accountsvc.NewJWTClientFromGlobalKeys()
+	if err != nil {
+		log.Fatalf("Failed to create JWT client from global keys: %v", err)
+	}
+	authClient := accountsvc.NewAuthClient(jwtClient)
+
 	r := configure.SetupRouter()
 
 	v1 := r.Group("/v1")
 	reader.RegisterRoutes(v1)
 	editor.RegisterRoutes(v1)
-	account.RegisterRoutes(v1, dbpkg.GetDB().DB, mailService)
+	account.RegisterRoutes(v1, dbpkg.GetDB().DB, mailService, authClient)
+	mgr.RegisterRoutes(v1, dbpkg.GetDB().DB, authClient)
 
 	serverAddr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
 	log.Printf("Starting server on %s", serverAddr)

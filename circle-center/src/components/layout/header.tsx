@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
 import {
   NavigationMenu,
@@ -11,9 +11,11 @@ import { Button } from '@/components/ui/button'
 import { UserProfileNavBubble } from '@/components/user/UserProfileNavBubble'
 import { authHelpers } from '@/api/client'
 import { profileApi } from '@/api/user/profile'
+import { cn } from '@/lib/utils'
 
 const Header = () => {
   const isAuthenticated = authHelpers.isAuthenticated()
+  const location = useLocation()
   const [currentUser, setCurrentUser] = useState<{
     display_name?: string
     username?: string
@@ -60,7 +62,10 @@ const Header = () => {
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild
-                className={navigationMenuTriggerStyle()}
+                className={cn(
+                  navigationMenuTriggerStyle(),
+                  location.pathname === '/' && '!bg-primary !text-primary-foreground'
+                )}
               >
                 <Link to="/">Home</Link>
               </NavigationMenuLink>
@@ -68,17 +73,12 @@ const Header = () => {
             <NavigationMenuItem>
               <NavigationMenuLink
                 asChild
-                className={navigationMenuTriggerStyle()}
+                className={cn(
+                  navigationMenuTriggerStyle(),
+                  location.pathname.startsWith('/manager/projects') && '!bg-primary !text-primary-foreground'
+                )}
               >
-                <Link to="/about">About</Link>
-              </NavigationMenuLink>
-            </NavigationMenuItem>
-            <NavigationMenuItem>
-              <NavigationMenuLink
-                asChild
-                className={navigationMenuTriggerStyle()}
-              >
-                <Link to="/reader">Reader</Link>
+                <Link to="/manager/projects">Projects</Link>
               </NavigationMenuLink>
             </NavigationMenuItem>
           </NavigationMenuList>

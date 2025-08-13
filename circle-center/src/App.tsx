@@ -3,16 +3,9 @@ import Header from './components/layout/header'
 import { Toaster } from './components/ui/sonner'
 import './App.css'
 import Home from './pages/Home'
-import Reader from './pages/Reader'
 import Login from './pages/Login'
 import Profile from './pages/profile/Profile'
-
-const About = () => (
-  <div className="p-4 text-center">
-    <h1 className="text-3xl font-bold mb-4">About Page</h1>
-    <p>This is a simple about page.</p>
-  </div>
-)
+import ProjectsPage from './pages/manager/Projects'
 
 function App() {
   return (
@@ -22,10 +15,9 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/reader" element={<Reader />} />
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/manager/projects" element={<ProjectsPage />} />
           </Routes>
         </main>
 
