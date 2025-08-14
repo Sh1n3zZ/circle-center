@@ -1,5 +1,6 @@
-import { Calendar, Eye, Package, Pencil, Trash2 } from "lucide-react";
+import { Calendar, Eye, Package, Pencil, Trash2, EyeIcon } from "lucide-react";
 import type { ProjectModel } from "@/api/manager/types";
+import { Link } from "react-router-dom";
 
 function Card({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return <div className={`border rounded-lg p-4 shadow-sm bg-white ${className}`}>{children}</div>;
@@ -51,6 +52,9 @@ export default function ProjectListCard({ project, onEdit, onDelete }: {
               <Trash2 className="w-4 h-4" /> Delete
             </button>
           )}
+          <Link to={`/manager/projects/${project.id}`} className="px-3 py-2 text-sm rounded-md border inline-flex items-center gap-1">
+            <EyeIcon className="w-4 h-4" /> Details
+          </Link>
         </div>
       )}
     </Card>

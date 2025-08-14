@@ -6,6 +6,7 @@ import Home from './pages/Home'
 import Login from './pages/Login'
 import Profile from './pages/profile/Profile'
 import ProjectsPage from './pages/manager/Projects'
+import ManagerProjectDetail from './pages/manager/Detail'
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/manager/projects" element={<ProjectsPage />} />
+            <Route path="/manager/projects/:id" element={<ManagerProjectDetail />} />
           </Routes>
         </main>
 

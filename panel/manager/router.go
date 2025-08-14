@@ -13,6 +13,9 @@ import (
 // RegisterRoutes registers all manager-related routes
 func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthClient) {
 	projectHandler := op.NewProjectHandler(db, authClient)
+	requestHandler := op.NewRequestHandler(db)
+	tokenHandler := op.NewTokenHandler(db)
+	xmlioHandler := op.NewXMLIOHandler(db)
 
 	manager := r.Group("/manager")
 	{
@@ -20,6 +23,11 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthC
 		manager.GET("/projects",
 			utils.ExtractBearerTokenMiddleware(),
 			projectHandler.ListProjects,
+		)
+
+		manager.GET("/projects/:id/tokens",
+			utils.ExtractBearerTokenMiddleware(),
+			tokenHandler.List,
 		)
 
 		manager.GET("/projects/:id",
@@ -46,5 +54,30 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthC
 			utils.ExtractBearerTokenMiddleware(),
 			projectHandler.AssignProjectRole,
 		)
+
+		manager.POST("/projects/:id/tokens",
+			utils.ExtractBearerTokenMiddleware(),
+			tokenHandler.Create,
+		)
+		manager.DELETE("/projects/:id/tokens/:tokenId",
+			utils.ExtractBearerTokenMiddleware(),
+			tokenHandler.Delete,
+		)
+
+		// Two-step XML import endpoints
+		manager.POST("/icons/parse",
+			utils.ExtractBearerTokenMiddleware(),
+			xmlioHandler.ParsePreview,
+		)
+		manager.POST("/icons/import",
+			utils.ExtractBearerTokenMiddleware(),
+			xmlioHandler.ConfirmImport,
+		)
+
+	}
+
+	request := r.Group("")
+	{
+		request.POST("/request", requestHandler.UploadRequest)
 	}
 }

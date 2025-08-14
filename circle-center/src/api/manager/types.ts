@@ -52,3 +52,68 @@ export interface AssignRoleRequest {
 }
 
 export interface AssignRoleResponse extends ApiEnvelope<{ ok: boolean }> {}
+
+export interface ProjectTokenModel {
+  id: number;
+  name: string;
+  active: boolean;
+  last_used_at: string;
+  created_at: string;
+}
+
+export interface ListTokensResponse extends ApiEnvelope<ProjectTokenModel[]> {}
+
+export interface CreateTokenRequest {
+  name?: string;
+}
+
+export interface CreateTokenData {
+  token_id: number;
+  token: string;
+}
+
+export interface CreateTokenResponse extends ApiEnvelope<CreateTokenData> {}
+export interface DeleteTokenResponse extends Partial<ApiEnvelope<Record<string, never>>> {}
+
+// ==========================
+// XML Import Types
+// ==========================
+
+export interface IconImportComponent {
+  // Keep the same keys as backend JSON
+  name: string;
+  pkg: string;
+  componentInfo: string;
+  drawable: string;
+}
+
+export interface ParseXmlRequest {
+  appfilter?: string;
+  appmap?: string;
+  theme?: string;
+}
+
+export interface ParseXmlResponse {
+  status: "success" | "error";
+  components?: IconImportComponent[];
+  message?: string;
+}
+
+export interface ImportSummary {
+  total: number;
+  created: number;
+  duplicates: number;
+  errors: number;
+  errorMsgs: string[];
+}
+
+export interface ConfirmImportRequest {
+  projectId: number;
+  components: IconImportComponent[];
+}
+
+export interface ConfirmImportResponse {
+  status: "success" | "error";
+  summary?: ImportSummary;
+  message?: string;
+}
