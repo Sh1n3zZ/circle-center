@@ -2,7 +2,7 @@ version: "2"
 sql:
   - engine: "mysql"
     queries: "query/account.sql"
-    schema: "migrations/v1_circle_center"
+    schema: "migrations/v1_account"
     gen:
       go:
         package: "account"
@@ -15,7 +15,7 @@ sql:
 
   - engine: "mysql"
     queries: "query/manager.sql"
-    schema: "migrations/v1_circle_center"
+    schema: ["migrations/v1_account", "migrations/v2_manager"]
     gen:
       go:
         package: "manager"
@@ -25,3 +25,7 @@ sql:
         emit_interface: true
         emit_exact_table_names: false
         emit_empty_slices: true
+        overrides:
+          - db_type: "json"
+            nullable: true
+            go_type: "database/sql.NullString"

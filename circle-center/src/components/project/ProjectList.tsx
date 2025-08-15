@@ -1,10 +1,7 @@
-import { useEffect, useState } from "react";
-import ProjectListCard from "@/components/project/ProjectListCard";
-import ProjectListCardCreate from "@/components/project/ProjectListCardCreate";
-import { projectApi } from "@/api/manager/project";
-import type { ProjectModel } from "@/api/manager/types";
-import { toast } from "sonner";
-import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { projectApi } from '@/api/manager/project';
+import type { ProjectModel } from '@/api/manager/types';
+import ProjectListCard from '@/components/project/ProjectListCard';
+import ProjectListCardCreate from '@/components/project/ProjectListCardCreate';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,13 +11,18 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from '@/components/ui/alert-dialog';
+import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { useEffect, useState } from 'react';
+import { toast } from 'sonner';
 
 export default function ProjectList() {
   const [projects, setProjects] = useState<ProjectModel[]>([]);
   const [loading, setLoading] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [projectToDelete, setProjectToDelete] = useState<ProjectModel | null>(null);
+  const [projectToDelete, setProjectToDelete] = useState<ProjectModel | null>(
+    null
+  );
 
   const fetchData = async () => {
     try {
@@ -28,7 +30,9 @@ export default function ProjectList() {
       const res = await projectApi.listMyProjects();
       setProjects(res.data || []);
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e.message || "Failed to load projects");
+      toast.error(
+        e?.response?.data?.message || e.message || 'Failed to load projects'
+      );
     } finally {
       setLoading(false);
     }
@@ -45,13 +49,13 @@ export default function ProjectList() {
 
   const handleDeleteConfirm = async () => {
     if (!projectToDelete) return;
-    
+
     try {
       await projectApi.deleteProject(projectToDelete.id);
-      toast.success("Project deleted");
+      toast.success('Project deleted');
       fetchData();
     } catch (e: any) {
-      toast.error(e?.response?.data?.message || e.message || "Delete failed");
+      toast.error(e?.response?.data?.message || e.message || 'Delete failed');
     } finally {
       setDeleteDialogOpen(false);
       setProjectToDelete(null);
@@ -65,19 +69,25 @@ export default function ProjectList() {
 
   return (
     <>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        <div className="h-full">
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+        <div className='h-full'>
           <ProjectListCardCreate onCreated={fetchData} />
         </div>
         {loading ? (
-          <div className="col-span-full flex justify-center py-8">
-            <LoadingSpinner className="text-gray-400" />
+          <div className='col-span-full flex justify-center py-8'>
+            <LoadingSpinner className='text-gray-400' />
           </div>
         ) : projects.length === 0 ? (
-          <div className="col-span-full text-center text-gray-500">No projects yet</div>
+          <div className='col-span-full text-center text-gray-500'>
+            No projects yet
+          </div>
         ) : (
-          projects.map((p) => (
-            <ProjectListCard key={p.id} project={p} onDelete={handleDeleteClick} />
+          projects.map(p => (
+            <ProjectListCard
+              key={p.id}
+              project={p}
+              onDelete={handleDeleteClick}
+            />
           ))
         )}
       </div>
@@ -87,12 +97,21 @@ export default function ProjectList() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Project</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{projectToDelete?.name}"? This action cannot be undone.
+              Are you sure you want to delete "{projectToDelete?.name}"? This
+              action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={handleDeleteCancel} className="cursor-pointer">Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700 cursor-pointer">
+            <AlertDialogCancel
+              onClick={handleDeleteCancel}
+              className='cursor-pointer'
+            >
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              className='bg-red-600 hover:bg-red-700 cursor-pointer'
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

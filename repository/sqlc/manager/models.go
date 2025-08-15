@@ -288,9 +288,9 @@ type Icon struct {
 	// Icon processing status
 	Status IconsStatus `json:"status"`
 	// Optional metadata as JSON
-	Metadata  json.RawMessage `json:"metadata"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at"`
+	Metadata  sql.NullString `json:"metadata"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"updated_at"`
 }
 
 // Icon request batches from clients

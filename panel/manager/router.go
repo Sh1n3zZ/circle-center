@@ -16,10 +16,11 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthC
 	requestHandler := op.NewRequestHandler(db)
 	tokenHandler := op.NewTokenHandler(db)
 	xmlioHandler := op.NewXMLIOHandler(db)
+	iconHandler := op.NewIconHandler(db)
+	iconioHandler := op.NewIconIOHandler(db, authClient)
 
 	manager := r.Group("/manager")
 	{
-		// Protected routes for project management
 		manager.GET("/projects",
 			utils.ExtractBearerTokenMiddleware(),
 			projectHandler.ListProjects,
@@ -64,7 +65,6 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthC
 			tokenHandler.Delete,
 		)
 
-		// Two-step XML import endpoints
 		manager.POST("/icons/parse",
 			utils.ExtractBearerTokenMiddleware(),
 			xmlioHandler.ParsePreview,
@@ -74,6 +74,40 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthC
 			xmlioHandler.ConfirmImport,
 		)
 
+		// Icon management endpoints
+		manager.GET("/projects/:id/icons",
+			utils.ExtractBearerTokenMiddleware(),
+			iconHandler.ListIcons,
+		)
+		manager.GET("/projects/:id/icons/stats",
+			utils.ExtractBearerTokenMiddleware(),
+			iconHandler.GetIconStats,
+		)
+		manager.GET("/projects/:id/icons/:iconId",
+			utils.ExtractBearerTokenMiddleware(),
+			iconHandler.GetIcon,
+		)
+		manager.POST("/projects/:id/icons",
+			utils.ExtractBearerTokenMiddleware(),
+			iconHandler.CreateIcon,
+		)
+		manager.PUT("/projects/:id/icons/:iconId",
+			utils.ExtractBearerTokenMiddleware(),
+			iconHandler.UpdateIcon,
+		)
+		manager.DELETE("/projects/:id/icons/:iconId",
+			utils.ExtractBearerTokenMiddleware(),
+			iconHandler.DeleteIcon,
+		)
+
+		manager.GET("/icons/*relpath",
+			utils.ExtractBearerTokenMiddleware(),
+			iconioHandler.GetIcon,
+		)
+		manager.POST("/icons/:projectId/upload",
+			utils.ExtractBearerTokenMiddleware(),
+			iconioHandler.UploadIcon,
+		)
 	}
 
 	request := r.Group("")

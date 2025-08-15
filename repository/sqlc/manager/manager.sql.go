@@ -182,13 +182,13 @@ INSERT INTO icons (
 `
 
 type CreateIconParams struct {
-	ProjectID     uint64          `json:"project_id"`
-	Name          string          `json:"name"`
-	Pkg           string          `json:"pkg"`
-	ComponentInfo string          `json:"component_info"`
-	Drawable      string          `json:"drawable"`
-	Status        IconsStatus     `json:"status"`
-	Metadata      json.RawMessage `json:"metadata"`
+	ProjectID     uint64         `json:"project_id"`
+	Name          string         `json:"name"`
+	Pkg           string         `json:"pkg"`
+	ComponentInfo string         `json:"component_info"`
+	Drawable      string         `json:"drawable"`
+	Status        IconsStatus    `json:"status"`
+	Metadata      sql.NullString `json:"metadata"`
 }
 
 // =============================================================================
@@ -526,19 +526,19 @@ ORDER BY i1.component_info, i1.created_at ASC
 `
 
 type GetDuplicateIconsRow struct {
-	ID                 uint64          `json:"id"`
-	ProjectID          uint64          `json:"project_id"`
-	Name               string          `json:"name"`
-	Pkg                string          `json:"pkg"`
-	ComponentInfo      string          `json:"component_info"`
-	Drawable           string          `json:"drawable"`
-	Status             IconsStatus     `json:"status"`
-	Metadata           json.RawMessage `json:"metadata"`
-	CreatedAt          time.Time       `json:"created_at"`
-	UpdatedAt          time.Time       `json:"updated_at"`
-	DuplicateID        uint64          `json:"duplicate_id"`
-	DuplicateName      string          `json:"duplicate_name"`
-	DuplicateCreatedAt time.Time       `json:"duplicate_created_at"`
+	ID                 uint64         `json:"id"`
+	ProjectID          uint64         `json:"project_id"`
+	Name               string         `json:"name"`
+	Pkg                string         `json:"pkg"`
+	ComponentInfo      string         `json:"component_info"`
+	Drawable           string         `json:"drawable"`
+	Status             IconsStatus    `json:"status"`
+	Metadata           sql.NullString `json:"metadata"`
+	CreatedAt          time.Time      `json:"created_at"`
+	UpdatedAt          time.Time      `json:"updated_at"`
+	DuplicateID        uint64         `json:"duplicate_id"`
+	DuplicateName      string         `json:"duplicate_name"`
+	DuplicateCreatedAt time.Time      `json:"duplicate_created_at"`
 }
 
 func (q *Queries) GetDuplicateIcons(ctx context.Context, projectID uint64) ([]GetDuplicateIconsRow, error) {
@@ -727,7 +727,7 @@ type GetIconWithRequestInfoRow struct {
 	ComponentInfo     string                     `json:"component_info"`
 	Drawable          string                     `json:"drawable"`
 	Status            IconsStatus                `json:"status"`
-	Metadata          json.RawMessage            `json:"metadata"`
+	Metadata          sql.NullString             `json:"metadata"`
 	CreatedAt         time.Time                  `json:"created_at"`
 	UpdatedAt         time.Time                  `json:"updated_at"`
 	RequestID         sql.NullInt64              `json:"request_id"`
@@ -1917,14 +1917,14 @@ WHERE id = ? AND project_id = ?
 `
 
 type UpdateIconParams struct {
-	Name          string          `json:"name"`
-	Pkg           string          `json:"pkg"`
-	ComponentInfo string          `json:"component_info"`
-	Drawable      string          `json:"drawable"`
-	Status        IconsStatus     `json:"status"`
-	Metadata      json.RawMessage `json:"metadata"`
-	ID            uint64          `json:"id"`
-	ProjectID     uint64          `json:"project_id"`
+	Name          string         `json:"name"`
+	Pkg           string         `json:"pkg"`
+	ComponentInfo string         `json:"component_info"`
+	Drawable      string         `json:"drawable"`
+	Status        IconsStatus    `json:"status"`
+	Metadata      sql.NullString `json:"metadata"`
+	ID            uint64         `json:"id"`
+	ProjectID     uint64         `json:"project_id"`
 }
 
 func (q *Queries) UpdateIcon(ctx context.Context, arg UpdateIconParams) error {

@@ -3,7 +3,6 @@ package manager
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"strings"
 
@@ -100,7 +99,7 @@ func (s *XMLIOService) SaveIcons(ctx context.Context, projectID uint64, componen
 			ComponentInfo: comp,
 			Drawable:      drawable,
 			Status:        managerdb.IconsStatusPending,
-			Metadata:      json.RawMessage(nil),
+			Metadata:      sql.NullString{Valid: false},
 		})
 		if err != nil {
 			// best-effort: treat unique constraint as duplicate

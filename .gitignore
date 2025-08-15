@@ -33,7 +33,7 @@ go.work.sum
 .cursor/
 
 # Storage file
-storage/
+storage/*
 
 # Config file
 config/config.yaml
