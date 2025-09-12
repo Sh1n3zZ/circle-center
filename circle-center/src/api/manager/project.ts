@@ -1,15 +1,14 @@
-import { get, post, put, request } from "../client";
+import { get, post, put, request } from '../client';
 import type {
-  ProjectModel,
-  CreateProjectRequest,
-  CreateProjectResponse,
-  UpdateProjectRequest,
-  UpdateProjectResponse,
-  DeleteProjectResponse,
   AssignRoleRequest,
   AssignRoleResponse,
+  CreateProjectRequest,
+  CreateProjectResponse,
+  DeleteProjectResponse,
   ListProjectsResponse,
-} from "./types";
+  UpdateProjectRequest,
+  UpdateProjectResponse,
+} from './types';
 
 // Manager project APIs
 export const projectApi = {
@@ -17,31 +16,50 @@ export const projectApi = {
   async listMyProjects(limit = 50, offset = 0): Promise<ListProjectsResponse> {
     // Assuming backend will provide an endpoint in the future like /manager/projects/mine
     // For now call a general endpoint; backend currently not implemented. Stub to /manager/projects?limit=&offset=
-    const res = await get<ListProjectsResponse>(`/manager/projects?limit=${limit}&offset=${offset}`);
+    const res = await get<ListProjectsResponse>(
+      `/manager/projects?limit=${limit}&offset=${offset}`
+    );
     return res.data;
   },
 
   // Create a project
-  async createProject(data: CreateProjectRequest): Promise<CreateProjectResponse> {
-    const res = await post<CreateProjectResponse>("/manager/projects", data);
+  async createProject(
+    data: CreateProjectRequest
+  ): Promise<CreateProjectResponse> {
+    const res = await post<CreateProjectResponse>('/manager/projects', data);
     return res.data;
   },
 
   // Update a project
-  async updateProject(id: number, data: UpdateProjectRequest): Promise<UpdateProjectResponse> {
-    const res = await put<UpdateProjectResponse>(`/manager/projects/${id}`, data);
+  async updateProject(
+    id: number,
+    data: UpdateProjectRequest
+  ): Promise<UpdateProjectResponse> {
+    const res = await put<UpdateProjectResponse>(
+      `/manager/projects/${id}`,
+      data
+    );
     return res.data;
   },
 
   // Delete a project
   async deleteProject(id: number): Promise<DeleteProjectResponse> {
-    const res = await request<DeleteProjectResponse>({ url: `/manager/projects/${id}`, method: "DELETE" });
+    const res = await request<DeleteProjectResponse>({
+      url: `/manager/projects/${id}`,
+      method: 'DELETE',
+    });
     return res.data;
   },
 
   // Assign a role to a user under a project (owner only)
-  async assignRole(projectId: number, data: AssignRoleRequest): Promise<AssignRoleResponse> {
-    const res = await post<AssignRoleResponse>(`/manager/projects/${projectId}/roles`, data);
+  async assignRole(
+    projectId: number,
+    data: AssignRoleRequest
+  ): Promise<AssignRoleResponse> {
+    const res = await post<AssignRoleResponse>(
+      `/manager/projects/${projectId}/roles`,
+      data
+    );
     return res.data;
   },
 };

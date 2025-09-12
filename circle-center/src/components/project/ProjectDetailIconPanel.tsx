@@ -1,5 +1,4 @@
 import type { IconModel } from '@/api/manager/types';
-import { useState } from 'react';
 import { toast } from 'sonner';
 import ProjectDetailIconCard from './ProjectDetailIconCard';
 
@@ -10,8 +9,6 @@ interface ProjectDetailIconPanelProps {
 export default function ProjectDetailIconPanel({
   projectId,
 }: ProjectDetailIconPanelProps) {
-  const [isLoading, setIsLoading] = useState(false);
-
   const handleAddIcon = () => {
     // TODO: Implement add icon functionality
     toast.info('Add icon functionality coming soon');
