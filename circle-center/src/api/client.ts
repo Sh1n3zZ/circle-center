@@ -2,6 +2,13 @@ import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios';
 import { authStorage } from '../lib/storage';
 import { API_PREFIX, BASE_URL } from './config';
 
+const SKIP_AUTH_ENDPOINTS = [
+  '/account/login',
+  '/account/register',
+  '/account/resend-verification',
+  '/account/verify',
+] as const;
+
 // Create a single axios instance to be used throughout the application.
 const client = axios.create({
   baseURL: `${BASE_URL}${API_PREFIX}`,
@@ -30,20 +37,20 @@ const processQueue = (error: any, token: string | null = null) => {
   failedQueue = [];
 };
 
+/**
+ * Check if an endpoint should skip authentication
+ * @param url - The request URL to check
+ * @returns true if the endpoint should skip authentication
+ */
+const isAuthEndpoint = (url: string | undefined): boolean => {
+  if (!url) return false;
+  return SKIP_AUTH_ENDPOINTS.some(endpoint => url.includes(endpoint));
+};
+
 // Request interceptor for attaching auth token and refresh
 client.interceptors.request.use(
   async config => {
-    const skipAuthEndpoints = [
-      '/account/login',
-      '/account/register',
-      '/account/resend-verification',
-      '/account/verify',
-    ];
-    const isAuthEndpoint = skipAuthEndpoints.some(endpoint =>
-      config.url?.includes(endpoint)
-    );
-
-    if (isAuthEndpoint) {
+    if (isAuthEndpoint(config.url)) {
       return config;
     }
 
@@ -54,6 +61,7 @@ client.interceptors.request.use(
     }
 
     if (
+      authHeader &&
       authStorage.shouldRefreshToken() &&
       !isRefreshing &&
       !config.url?.includes('/account/refresh')
@@ -98,7 +106,11 @@ client.interceptors.response.use(
   async error => {
     const originalRequest = error.config;
 
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !isAuthEndpoint(originalRequest.url)
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
