@@ -12,6 +12,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
@@ -69,28 +70,38 @@ export default function ProjectList() {
 
   return (
     <>
-      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
-        <div className='h-full'>
+      <Card>
+        <CardHeader className='flex flex-row items-center justify-between'>
+          <div>
+            <h2 className='text-lg font-semibold'>Projects</h2>
+            <p className='text-sm text-muted-foreground'>
+              Manage your icon pack projects
+            </p>
+          </div>
           <ProjectListCardCreate onCreated={fetchData} />
-        </div>
-        {loading ? (
-          <div className='col-span-full flex justify-center py-8'>
-            <LoadingSpinner className='text-gray-400' />
-          </div>
-        ) : projects.length === 0 ? (
-          <div className='col-span-full text-center text-gray-500'>
-            No projects yet
-          </div>
-        ) : (
-          projects.map(p => (
-            <ProjectListCard
-              key={p.id}
-              project={p}
-              onDelete={handleDeleteClick}
-            />
-          ))
-        )}
-      </div>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className='flex justify-center py-8'>
+              <LoadingSpinner className='text-gray-400' />
+            </div>
+          ) : projects.length === 0 ? (
+            <div className='text-center text-gray-500 py-8'>
+              No projects yet. Create your first project to get started.
+            </div>
+          ) : (
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'>
+              {projects.map(p => (
+                <ProjectListCard
+                  key={p.id}
+                  project={p}
+                  onDelete={handleDeleteClick}
+                />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
