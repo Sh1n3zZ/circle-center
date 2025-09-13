@@ -1,13 +1,13 @@
-import axios, { type AxiosRequestConfig, type AxiosResponse } from "axios";
-import { BASE_URL, API_PREFIX } from "./config";
-import { authStorage } from "../lib/storage";
+import axios, { type AxiosRequestConfig, type AxiosResponse } from 'axios';
+import { authStorage } from '../lib/storage';
+import { API_PREFIX, BASE_URL } from './config';
 
 // Create a single axios instance to be used throughout the application.
 const client = axios.create({
   baseURL: `${BASE_URL}${API_PREFIX}`,
   timeout: 10000, // 10 seconds timeout
   headers: {
-    "Content-Type": "application/json",
+    'Content-Type': 'application/json',
   },
 });
 
@@ -26,46 +26,61 @@ const processQueue = (error: any, token: string | null = null) => {
       resolve(token);
     }
   });
-  
+
   failedQueue = [];
 };
 
 // Request interceptor for attaching auth token and refresh
 client.interceptors.request.use(
-  async (config) => {
-    const skipAuthEndpoints = ['/account/login', '/account/register', '/account/resend-verification'];
-    const isAuthEndpoint = skipAuthEndpoints.some(endpoint => config.url?.includes(endpoint));
-    
+  async config => {
+    const skipAuthEndpoints = [
+      '/account/login',
+      '/account/register',
+      '/account/resend-verification',
+      '/account/verify',
+    ];
+    const isAuthEndpoint = skipAuthEndpoints.some(endpoint =>
+      config.url?.includes(endpoint)
+    );
+
     if (isAuthEndpoint) {
       return config;
     }
 
     const authHeader = authStorage.getAuthHeader();
-    
+
     if (authHeader) {
-      config.headers["Authorization"] = authHeader;
+      config.headers['Authorization'] = authHeader;
     }
 
-    if (authStorage.shouldRefreshToken() && !isRefreshing && !config.url?.includes('/account/refresh')) {
+    if (
+      authStorage.shouldRefreshToken() &&
+      !isRefreshing &&
+      !config.url?.includes('/account/refresh')
+    ) {
       try {
         isRefreshing = true;
-        
+
         const { authApi } = await import('./auth/auth');
         const refreshResponse = await authApi.refreshToken();
-        
-        await authStorage.setAuthToken(refreshResponse.data.token, refreshResponse.data.expires_at);
-        
-        config.headers["Authorization"] = `Bearer ${refreshResponse.data.token}`;
-        
+
+        await authStorage.setAuthToken(
+          refreshResponse.data.token,
+          refreshResponse.data.expires_at
+        );
+
+        config.headers['Authorization'] =
+          `Bearer ${refreshResponse.data.token}`;
+
         processQueue(null, refreshResponse.data.token);
       } catch (refreshError) {
         await authStorage.clearAuth();
         processQueue(refreshError, null);
-        
+
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
-        
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -74,25 +89,27 @@ client.interceptors.request.use(
 
     return config;
   },
-  (error) => Promise.reject(error),
+  error => Promise.reject(error)
 );
 
 // Response interceptor for handling global errors, refreshing tokens, etc.
 client.interceptors.response.use(
-  (response) => response,
-  async (error) => {
+  response => response,
+  async error => {
     const originalRequest = error.config;
 
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
-        }).then(token => {
-          originalRequest.headers['Authorization'] = `Bearer ${token}`;
-          return client(originalRequest);
-        }).catch(err => {
-          return Promise.reject(err);
-        });
+        })
+          .then(token => {
+            originalRequest.headers['Authorization'] = `Bearer ${token}`;
+            return client(originalRequest);
+          })
+          .catch(err => {
+            return Promise.reject(err);
+          });
       }
 
       originalRequest._retry = true;
@@ -101,22 +118,26 @@ client.interceptors.response.use(
       try {
         const { authApi } = await import('./auth/auth');
         const refreshResponse = await authApi.refreshToken();
-        
-        await authStorage.setAuthToken(refreshResponse.data.token, refreshResponse.data.expires_at);
-        
-        originalRequest.headers['Authorization'] = `Bearer ${refreshResponse.data.token}`;
-        
+
+        await authStorage.setAuthToken(
+          refreshResponse.data.token,
+          refreshResponse.data.expires_at
+        );
+
+        originalRequest.headers['Authorization'] =
+          `Bearer ${refreshResponse.data.token}`;
+
         processQueue(null, refreshResponse.data.token);
-        
+
         return client(originalRequest);
       } catch (refreshError) {
         await authStorage.clearAuth();
         processQueue(refreshError, null);
-        
+
         if (typeof window !== 'undefined') {
           window.location.href = '/login';
         }
-        
+
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -124,7 +145,7 @@ client.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  },
+  }
 );
 
 // -----------------------------
@@ -143,7 +164,9 @@ export interface RequestOptions<T = any> extends AxiosRequestConfig<T> {
  * Unified request function that allows per-call control over content type while
  * keeping a single axios instance under the hood.
  */
-export function request<T = any>(options: RequestOptions<T>): Promise<AxiosResponse<T>> {
+export function request<T = any>(
+  options: RequestOptions<T>
+): Promise<AxiosResponse<T>> {
   const { asFormData, data, headers, transformRequest, ...rest } = options;
 
   let finalHeaders = headers ?? {};
@@ -151,21 +174,23 @@ export function request<T = any>(options: RequestOptions<T>): Promise<AxiosRespo
   let finalTransformRequest = transformRequest;
 
   if (asFormData) {
-    if (data && typeof data === "object" && !(data instanceof FormData)) {
+    if (data && typeof data === 'object' && !(data instanceof FormData)) {
       const formData = new FormData();
-      Object.entries(data as Record<string, unknown>).forEach(([key, value]) => {
-        if (Array.isArray(value)) {
-          value.forEach((v) => formData.append(key, v as any));
-        } else if (value !== undefined && value !== null) {
-          formData.append(key, value as any);
+      Object.entries(data as Record<string, unknown>).forEach(
+        ([key, value]) => {
+          if (Array.isArray(value)) {
+            value.forEach(v => formData.append(key, v as any));
+          } else if (value !== undefined && value !== null) {
+            formData.append(key, value as any);
+          }
         }
-      });
+      );
       finalData = formData;
     }
 
     finalHeaders = {
       ...finalHeaders,
-      "Content-Type": "multipart/form-data",
+      'Content-Type': 'multipart/form-data',
     };
 
     finalTransformRequest = (reqData: unknown) => reqData;
@@ -181,13 +206,19 @@ export function request<T = any>(options: RequestOptions<T>): Promise<AxiosRespo
 
 // Optional helper shortcuts
 export const get = <T = any>(url: string, config?: RequestOptions) =>
-  request<T>({ url, method: "GET", ...config });
+  request<T>({ url, method: 'GET', ...config });
 
-export const post = <T = any>(url: string, data?: any, config?: RequestOptions) =>
-  request<T>({ url, method: "POST", data, ...config });
+export const post = <T = any>(
+  url: string,
+  data?: any,
+  config?: RequestOptions
+) => request<T>({ url, method: 'POST', data, ...config });
 
-export const put = <T = any>(url: string, data?: any, config?: RequestOptions) =>
-  request<T>({ url, method: "PUT", data, ...config });
+export const put = <T = any>(
+  url: string,
+  data?: any,
+  config?: RequestOptions
+) => request<T>({ url, method: 'PUT', data, ...config });
 
 // Authentication helper functions
 export const authHelpers = {
@@ -217,7 +248,7 @@ export const authHelpers = {
    */
   shouldRefreshToken(): boolean {
     return authStorage.shouldRefreshToken();
-  }
+  },
 };
 
 export default client;
