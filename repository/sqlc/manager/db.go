@@ -30,6 +30,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.countActiveAPIKeysStmt, err = db.PrepareContext(ctx, countActiveAPIKeys); err != nil {
 		return nil, fmt.Errorf("error preparing query CountActiveAPIKeys: %w", err)
 	}
+	if q.countCollaboratorProjectsStmt, err = db.PrepareContext(ctx, countCollaboratorProjects); err != nil {
+		return nil, fmt.Errorf("error preparing query CountCollaboratorProjects: %w", err)
+	}
 	if q.countIconsByStatusStmt, err = db.PrepareContext(ctx, countIconsByStatus); err != nil {
 		return nil, fmt.Errorf("error preparing query CountIconsByStatus: %w", err)
 	}
@@ -180,6 +183,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.getUserQuotaStmt, err = db.PrepareContext(ctx, getUserQuota); err != nil {
 		return nil, fmt.Errorf("error preparing query GetUserQuota: %w", err)
 	}
+	if q.listCollaboratorProjectIDsStmt, err = db.PrepareContext(ctx, listCollaboratorProjectIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query ListCollaboratorProjectIDs: %w", err)
+	}
 	if q.listIconsByPackageStmt, err = db.PrepareContext(ctx, listIconsByPackage); err != nil {
 		return nil, fmt.Errorf("error preparing query ListIconsByPackage: %w", err)
 	}
@@ -188,6 +194,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	}
 	if q.listItemsByResolutionStmt, err = db.PrepareContext(ctx, listItemsByResolution); err != nil {
 		return nil, fmt.Errorf("error preparing query ListItemsByResolution: %w", err)
+	}
+	if q.listOwnedProjectIDsStmt, err = db.PrepareContext(ctx, listOwnedProjectIDs); err != nil {
+		return nil, fmt.Errorf("error preparing query ListOwnedProjectIDs: %w", err)
 	}
 	if q.listProjectAPIKeysStmt, err = db.PrepareContext(ctx, listProjectAPIKeys); err != nil {
 		return nil, fmt.Errorf("error preparing query ListProjectAPIKeys: %w", err)
@@ -274,6 +283,11 @@ func (q *Queries) Close() error {
 	if q.countActiveAPIKeysStmt != nil {
 		if cerr := q.countActiveAPIKeysStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing countActiveAPIKeysStmt: %w", cerr)
+		}
+	}
+	if q.countCollaboratorProjectsStmt != nil {
+		if cerr := q.countCollaboratorProjectsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing countCollaboratorProjectsStmt: %w", cerr)
 		}
 	}
 	if q.countIconsByStatusStmt != nil {
@@ -526,6 +540,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing getUserQuotaStmt: %w", cerr)
 		}
 	}
+	if q.listCollaboratorProjectIDsStmt != nil {
+		if cerr := q.listCollaboratorProjectIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listCollaboratorProjectIDsStmt: %w", cerr)
+		}
+	}
 	if q.listIconsByPackageStmt != nil {
 		if cerr := q.listIconsByPackageStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listIconsByPackageStmt: %w", cerr)
@@ -539,6 +558,11 @@ func (q *Queries) Close() error {
 	if q.listItemsByResolutionStmt != nil {
 		if cerr := q.listItemsByResolutionStmt.Close(); cerr != nil {
 			err = fmt.Errorf("error closing listItemsByResolutionStmt: %w", cerr)
+		}
+	}
+	if q.listOwnedProjectIDsStmt != nil {
+		if cerr := q.listOwnedProjectIDsStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing listOwnedProjectIDsStmt: %w", cerr)
 		}
 	}
 	if q.listProjectAPIKeysStmt != nil {
@@ -702,6 +726,7 @@ type Queries struct {
 	tx                               *sql.Tx
 	checkUserQuotaStmt               *sql.Stmt
 	countActiveAPIKeysStmt           *sql.Stmt
+	countCollaboratorProjectsStmt    *sql.Stmt
 	countIconsByStatusStmt           *sql.Stmt
 	countItemsByResolutionStmt       *sql.Stmt
 	countProjectCollaboratorsStmt    *sql.Stmt
@@ -752,9 +777,11 @@ type Queries struct {
 	getRequestStatsStmt              *sql.Stmt
 	getUserProjectRoleStmt           *sql.Stmt
 	getUserQuotaStmt                 *sql.Stmt
+	listCollaboratorProjectIDsStmt   *sql.Stmt
 	listIconsByPackageStmt           *sql.Stmt
 	listIconsByStatusStmt            *sql.Stmt
 	listItemsByResolutionStmt        *sql.Stmt
+	listOwnedProjectIDsStmt          *sql.Stmt
 	listProjectAPIKeysStmt           *sql.Stmt
 	listProjectCollaboratorsStmt     *sql.Stmt
 	listProjectIconsStmt             *sql.Stmt
@@ -787,6 +814,7 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		tx:                               tx,
 		checkUserQuotaStmt:               q.checkUserQuotaStmt,
 		countActiveAPIKeysStmt:           q.countActiveAPIKeysStmt,
+		countCollaboratorProjectsStmt:    q.countCollaboratorProjectsStmt,
 		countIconsByStatusStmt:           q.countIconsByStatusStmt,
 		countItemsByResolutionStmt:       q.countItemsByResolutionStmt,
 		countProjectCollaboratorsStmt:    q.countProjectCollaboratorsStmt,
@@ -837,9 +865,11 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		getRequestStatsStmt:              q.getRequestStatsStmt,
 		getUserProjectRoleStmt:           q.getUserProjectRoleStmt,
 		getUserQuotaStmt:                 q.getUserQuotaStmt,
+		listCollaboratorProjectIDsStmt:   q.listCollaboratorProjectIDsStmt,
 		listIconsByPackageStmt:           q.listIconsByPackageStmt,
 		listIconsByStatusStmt:            q.listIconsByStatusStmt,
 		listItemsByResolutionStmt:        q.listItemsByResolutionStmt,
+		listOwnedProjectIDsStmt:          q.listOwnedProjectIDsStmt,
 		listProjectAPIKeysStmt:           q.listProjectAPIKeysStmt,
 		listProjectCollaboratorsStmt:     q.listProjectCollaboratorsStmt,
 		listProjectIconsStmt:             q.listProjectIconsStmt,

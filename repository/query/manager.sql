@@ -19,6 +19,14 @@ SELECT * FROM projects WHERE id = ? AND owner_user_id = ? LIMIT 1;
 -- name: ListProjectsByOwner :many
 SELECT * FROM projects WHERE owner_user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?;
 
+-- Lightweight ID fetch for owner projects (useful for code-side merging/pagination)
+-- name: ListOwnedProjectIDs :many
+SELECT id 
+FROM projects 
+WHERE owner_user_id = ? 
+ORDER BY created_at DESC 
+LIMIT ? OFFSET ?;
+
 -- name: ListPublicProjects :many
 SELECT * FROM projects WHERE visibility = 'public' ORDER BY created_at DESC LIMIT ? OFFSET ?;
 
@@ -81,6 +89,20 @@ FROM user_project_roles upr
 JOIN projects p ON upr.project_id = p.id
 WHERE upr.user_id = ?
 ORDER BY upr.added_at DESC;
+
+-- Lightweight ID fetch for collaborator projects (excluding owner role)
+-- name: ListCollaboratorProjectIDs :many
+SELECT project_id 
+FROM user_project_roles 
+WHERE user_id = ? AND role <> 'owner' 
+ORDER BY added_at DESC 
+LIMIT ? OFFSET ?;
+
+-- Count collaborator projects (excluding owner role)
+-- name: CountCollaboratorProjects :one
+SELECT COUNT(*) 
+FROM user_project_roles 
+WHERE user_id = ? AND role <> 'owner';
 
 -- name: UpdateUserProjectRole :exec
 UPDATE user_project_roles SET role = ? WHERE user_id = ? AND project_id = ?;

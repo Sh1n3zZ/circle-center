@@ -52,6 +52,16 @@ type AssignRoleRequest struct {
 	Role         string `json:"role" binding:"required"` // owner|admin|editor|viewer (owner change is restricted)
 }
 
+// CollaboratorInfo represents a project member's role information
+type CollaboratorInfo struct {
+	UserID      uint64 `json:"user_id"`
+	Role        string `json:"role"`
+	AddedAt     string `json:"added_at"`
+	Username    string `json:"username"`
+	DisplayName string `json:"display_name,omitempty"`
+	AvatarURL   string `json:"avatar_url,omitempty"`
+}
+
 // CreateProjectResponse represents the response for project creation
 type CreateProjectResponse struct {
 	ID          uint64 `json:"id"`
@@ -195,16 +205,64 @@ func (s *ProjectService) ListProjects(ctx context.Context, token string, limit, 
 		offset = 0
 	}
 
-	rows, err := s.queries.ListProjectsByOwner(ctx, managerdb.ListProjectsByOwnerParams{
-		OwnerUserID: claims.UserID,
-		Limit:       limit,
-		Offset:      offset,
-	})
+	ownedCount, err := s.queries.CountProjectsByOwner(ctx, claims.UserID)
 	if err != nil {
 		return nil, err
 	}
-	list := make([]*CreateProjectResponse, 0, len(rows))
-	for _, p := range rows {
+	_, err = s.queries.CountCollaboratorProjects(ctx, claims.UserID)
+	if err != nil {
+		return nil, err
+	}
+
+	totalOwned := int(ownedCount)
+	ownedStart := int(offset)
+	if ownedStart > totalOwned {
+		ownedStart = totalOwned
+	}
+	ownedAvail := totalOwned - ownedStart
+	ownedTake := int(limit)
+	if ownedTake > ownedAvail {
+		ownedTake = ownedAvail
+	}
+
+	ownedIDs := make([]uint64, 0)
+	if ownedTake > 0 {
+		ids, err := s.queries.ListOwnedProjectIDs(ctx, managerdb.ListOwnedProjectIDsParams{
+			OwnerUserID: claims.UserID,
+			Limit:       int32(ownedTake),
+			Offset:      int32(ownedStart),
+		})
+		if err != nil {
+			return nil, err
+		}
+		ownedIDs = append(ownedIDs, ids...)
+	}
+
+	collabIDs := make([]uint64, 0)
+	if len(ownedIDs) < int(limit) {
+		collabNeeded := int(limit) - len(ownedIDs)
+		collabOffset := 0
+		if int(offset) > totalOwned {
+			collabOffset = int(offset) - totalOwned
+		}
+		ids, err := s.queries.ListCollaboratorProjectIDs(ctx, managerdb.ListCollaboratorProjectIDsParams{
+			UserID: claims.UserID,
+			Limit:  int32(collabNeeded),
+			Offset: int32(collabOffset),
+		})
+		if err != nil {
+			return nil, err
+		}
+		collabIDs = append(collabIDs, ids...)
+	}
+
+	mergedIDs := append(ownedIDs, collabIDs...)
+	list := make([]*CreateProjectResponse, 0, len(mergedIDs))
+	for _, pid := range mergedIDs {
+		p, err := s.queries.GetProjectByID(ctx, pid)
+		if err != nil {
+			continue
+		}
 		list = append(list, &CreateProjectResponse{
 			ID:          p.ID,
 			OwnerUserID: p.OwnerUserID,
@@ -401,6 +459,10 @@ func (s *ProjectService) AssignProjectRole(ctx context.Context, token string, pr
 		return fmt.Errorf("forbidden")
 	}
 
+	if req.TargetUserID == project.OwnerUserID {
+		return fmt.Errorf("cannot modify project owner role")
+	}
+
 	roleStr := strings.ToLower(strings.TrimSpace(req.Role))
 	var role managerdb.UserProjectRolesRole
 	switch roleStr {
@@ -435,4 +497,87 @@ func (s *ProjectService) AssignProjectRole(ctx context.Context, token string, pr
 		Role:      role,
 	})
 	return err
+}
+
+// GetProjectMembersRoles lists all collaborators and their roles for a project.
+// Only users with role owner or admin may access the full list.
+func (s *ProjectService) GetProjectMembersRoles(ctx context.Context, token string, projectID uint64) ([]*CollaboratorInfo, error) {
+	if s.authClient == nil {
+		return nil, fmt.Errorf("auth client not initialized")
+	}
+	claims, err := s.authClient.ValidateToken(ctx, token)
+	if err != nil {
+		return nil, fmt.Errorf("invalid token: %w", err)
+	}
+
+	// Determine caller role (treat project owner as owner if role row missing)
+	callerRole := ""
+	var callerAddedAt string
+	if upr, err := s.queries.GetUserProjectRole(ctx, managerdb.GetUserProjectRoleParams{UserID: claims.UserID, ProjectID: projectID}); err == nil {
+		callerRole = string(upr.Role)
+		callerAddedAt = upr.AddedAt.UTC().Format("2006-01-02T15:04:05Z07:00")
+	} else if p, perr := s.queries.GetProjectByID(ctx, projectID); perr == nil && p.OwnerUserID == claims.UserID {
+		callerRole = "owner"
+	}
+
+	// Owner/Admin: return full collaborator list
+	if callerRole == string(managerdb.UserProjectRolesRoleOwner) || callerRole == string(managerdb.UserProjectRolesRoleAdmin) || callerRole == "owner" {
+		rows, err := s.queries.ListProjectCollaborators(ctx, projectID)
+		if err != nil {
+			return nil, err
+		}
+		out := make([]*CollaboratorInfo, 0, len(rows))
+		for _, r := range rows {
+			out = append(out, &CollaboratorInfo{
+				UserID:      r.UserID,
+				Role:        string(r.Role),
+				AddedAt:     r.AddedAt.UTC().Format("2006-01-02T15:04:05Z07:00"),
+				Username:    r.Username,
+				DisplayName: mutils.NullString(r.DisplayName),
+				AvatarURL:   mutils.NullString(r.AvatarUrl),
+			})
+		}
+		return out, nil
+	}
+
+	// Non-admin member: return only caller's own role
+	if callerRole != "" {
+		return []*CollaboratorInfo{{
+			UserID:  claims.UserID,
+			Role:    callerRole,
+			AddedAt: callerAddedAt,
+		}}, nil
+	}
+
+	// Not a member of the project
+	return nil, fmt.Errorf("forbidden")
+}
+
+// RemoveProjectCollaborator removes a collaborator from a project. Owner-only.
+func (s *ProjectService) RemoveProjectCollaborator(ctx context.Context, token string, projectID uint64, userID uint64) error {
+    if s.authClient == nil {
+        return fmt.Errorf("auth client not initialized")
+    }
+    claims, err := s.authClient.ValidateToken(ctx, token)
+    if err != nil {
+        return fmt.Errorf("invalid token: %w", err)
+    }
+
+    project, err := s.queries.GetProjectByID(ctx, projectID)
+    if err != nil {
+        return fmt.Errorf("project not found")
+    }
+    if project.OwnerUserID != claims.UserID {
+        return fmt.Errorf("forbidden")
+    }
+
+    if userID == project.OwnerUserID {
+        return fmt.Errorf("cannot remove project owner")
+    }
+
+    // Perform deletion (no-op if not exists)
+    return s.queries.DeleteUserProjectRole(ctx, managerdb.DeleteUserProjectRoleParams{
+        UserID:    userID,
+        ProjectID: projectID,
+    })
 }

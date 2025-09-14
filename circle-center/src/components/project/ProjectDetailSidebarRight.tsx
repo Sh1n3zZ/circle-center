@@ -4,8 +4,9 @@ import {
   SidebarGroupContent,
   SidebarGroupLabel,
 } from '@/components/ui/sidebar';
-import { ChevronDown, ChevronRight, FileText, Key } from 'lucide-react';
+import { ChevronDown, ChevronRight, FileText, Key, Users } from 'lucide-react';
 import { useState } from 'react';
+import ProjectDetailRoles from './ProjectDetailRoles';
 import ProjectDetailTokenPanel from './ProjectDetailTokenPanel';
 import ProjectDetailXmlImport from './ProjectDetailXmlImport';
 
@@ -18,6 +19,7 @@ export default function ProjectDetailSidebarRight({
 }: ProjectDetailSidebarRightProps) {
   const [isTokensExpanded, setIsTokensExpanded] = useState(true);
   const [isXmlExpanded, setIsXmlExpanded] = useState(false);
+  const [isRolesExpanded, setIsRolesExpanded] = useState(false);
 
   const toggleTokensExpanded = () => {
     setIsTokensExpanded(!isTokensExpanded);
@@ -25,6 +27,10 @@ export default function ProjectDetailSidebarRight({
 
   const toggleXmlExpanded = () => {
     setIsXmlExpanded(!isXmlExpanded);
+  };
+
+  const toggleRolesExpanded = () => {
+    setIsRolesExpanded(!isRolesExpanded);
   };
 
   return (
@@ -95,6 +101,38 @@ export default function ProjectDetailSidebarRight({
             }`}
           >
             <ProjectDetailXmlImport projectId={projectId} />
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel
+            className='flex items-center justify-between cursor-pointer'
+            onClick={toggleRolesExpanded}
+          >
+            <div className='flex items-center gap-2'>
+              <Users className='h-4 w-4' />
+              <span>Collaborators</span>
+            </div>
+            <SidebarGroupAction
+              onClick={e => {
+                e.stopPropagation();
+                toggleRolesExpanded();
+              }}
+            >
+              {isRolesExpanded ? (
+                <ChevronDown className='h-4 w-4' />
+              ) : (
+                <ChevronRight className='h-4 w-4' />
+              )}
+            </SidebarGroupAction>
+          </SidebarGroupLabel>
+          <SidebarGroupContent
+            className={`transition-all duration-300 ease-in-out ${
+              isRolesExpanded
+                ? 'max-h-[800px] opacity-100 mt-2'
+                : 'max-h-0 opacity-0 overflow-hidden'
+            }`}
+          >
+            <ProjectDetailRoles projectId={projectId} />
           </SidebarGroupContent>
         </SidebarGroup>
       </div>

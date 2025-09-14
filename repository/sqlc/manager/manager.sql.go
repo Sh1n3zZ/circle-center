@@ -60,6 +60,20 @@ func (q *Queries) CountActiveAPIKeys(ctx context.Context, projectID uint64) (int
 	return count, err
 }
 
+const countCollaboratorProjects = `-- name: CountCollaboratorProjects :one
+SELECT COUNT(*) 
+FROM user_project_roles 
+WHERE user_id = ? AND role <> 'owner'
+`
+
+// Count collaborator projects (excluding owner role)
+func (q *Queries) CountCollaboratorProjects(ctx context.Context, userID uint64) (int64, error) {
+	row := q.queryRow(ctx, q.countCollaboratorProjectsStmt, countCollaboratorProjects, userID)
+	var count int64
+	err := row.Scan(&count)
+	return count, err
+}
+
 const countIconsByStatus = `-- name: CountIconsByStatus :one
 SELECT COUNT(*) FROM icons WHERE project_id = ? AND status = ?
 `
@@ -1117,6 +1131,44 @@ func (q *Queries) GetUserQuota(ctx context.Context, userID uint64) (UserQuota, e
 	return i, err
 }
 
+const listCollaboratorProjectIDs = `-- name: ListCollaboratorProjectIDs :many
+SELECT project_id 
+FROM user_project_roles 
+WHERE user_id = ? AND role <> 'owner' 
+ORDER BY added_at DESC 
+LIMIT ? OFFSET ?
+`
+
+type ListCollaboratorProjectIDsParams struct {
+	UserID uint64 `json:"user_id"`
+	Limit  int32  `json:"limit"`
+	Offset int32  `json:"offset"`
+}
+
+// Lightweight ID fetch for collaborator projects (excluding owner role)
+func (q *Queries) ListCollaboratorProjectIDs(ctx context.Context, arg ListCollaboratorProjectIDsParams) ([]uint64, error) {
+	rows, err := q.query(ctx, q.listCollaboratorProjectIDsStmt, listCollaboratorProjectIDs, arg.UserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uint64{}
+	for rows.Next() {
+		var project_id uint64
+		if err := rows.Scan(&project_id); err != nil {
+			return nil, err
+		}
+		items = append(items, project_id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listIconsByPackage = `-- name: ListIconsByPackage :many
 SELECT id, project_id, name, pkg, component_info, drawable, status, metadata, created_at, updated_at FROM icons WHERE project_id = ? AND pkg = ? ORDER BY name ASC
 `
@@ -1245,6 +1297,44 @@ func (q *Queries) ListItemsByResolution(ctx context.Context, arg ListItemsByReso
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOwnedProjectIDs = `-- name: ListOwnedProjectIDs :many
+SELECT id 
+FROM projects 
+WHERE owner_user_id = ? 
+ORDER BY created_at DESC 
+LIMIT ? OFFSET ?
+`
+
+type ListOwnedProjectIDsParams struct {
+	OwnerUserID uint64 `json:"owner_user_id"`
+	Limit       int32  `json:"limit"`
+	Offset      int32  `json:"offset"`
+}
+
+// Lightweight ID fetch for owner projects (useful for code-side merging/pagination)
+func (q *Queries) ListOwnedProjectIDs(ctx context.Context, arg ListOwnedProjectIDsParams) ([]uint64, error) {
+	rows, err := q.query(ctx, q.listOwnedProjectIDsStmt, listOwnedProjectIDs, arg.OwnerUserID, arg.Limit, arg.Offset)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uint64{}
+	for rows.Next() {
+		var id uint64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err

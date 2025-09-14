@@ -5,6 +5,7 @@ import type {
   CreateProjectRequest,
   CreateProjectResponse,
   DeleteProjectResponse,
+  ListProjectRolesResponse,
   ListProjectsResponse,
   UpdateProjectRequest,
   UpdateProjectResponse,
@@ -60,6 +61,26 @@ export const projectApi = {
       `/manager/projects/${projectId}/roles`,
       data
     );
+    return res.data;
+  },
+
+  // List project roles/collaborators
+  async listProjectRoles(projectId: number): Promise<ListProjectRolesResponse> {
+    const res = await get<ListProjectRolesResponse>(
+      `/manager/projects/${projectId}/roles`
+    );
+    return res.data;
+  },
+
+  // Remove a collaborator from a project (owner only)
+  async removeCollaborator(
+    projectId: number,
+    userId: number
+  ): Promise<{ success: boolean }> {
+    const res = await request<{ success: boolean }>({
+      url: `/manager/projects/${projectId}/roles/${userId}`,
+      method: 'DELETE',
+    });
     return res.data;
   },
 };

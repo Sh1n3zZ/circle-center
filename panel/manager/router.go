@@ -56,6 +56,16 @@ func RegisterRoutes(r *gin.RouterGroup, db *sql.DB, authClient *accountsvc.AuthC
 			projectHandler.AssignProjectRole,
 		)
 
+		manager.GET("/projects/:id/roles",
+			utils.ExtractBearerTokenMiddleware(),
+			projectHandler.ListProjectRoles,
+		)
+
+		manager.DELETE("/projects/:id/roles/:userId",
+			utils.ExtractBearerTokenMiddleware(),
+			projectHandler.DeleteProjectCollaborator,
+		)
+
 		manager.POST("/projects/:id/tokens",
 			utils.ExtractBearerTokenMiddleware(),
 			tokenHandler.Create,

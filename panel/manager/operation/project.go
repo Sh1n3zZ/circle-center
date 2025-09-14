@@ -232,3 +232,63 @@ func (h *ProjectHandler) AssignProjectRole(c *gin.Context) {
 		"message": "Role assigned successfully",
 	})
 }
+
+// ListProjectRoles handles GET /manager/projects/:id/roles
+func (h *ProjectHandler) ListProjectRoles(c *gin.Context) {
+    token, ok := oputils.GetTokenFromContext(c)
+    if !ok {
+        var err error
+        token, err = oputils.ExtractBearerToken(c)
+        if err != nil {
+            oputils.RespondWithAuthError(c, err)
+            return
+        }
+    }
+
+    projectIDStr := c.Param("id")
+    projectID, err := strconv.ParseUint(projectIDStr, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_PROJECT_ID", "message": "project id must be uint"})
+        return
+    }
+
+    list, err := h.service.GetProjectMembersRoles(c.Request.Context(), token, projectID)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "GET_ROLES_FAILED", "message": err.Error()})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"success": true, "data": list})
+}
+
+// DeleteProjectCollaborator handles DELETE /manager/projects/:id/roles/:userId
+func (h *ProjectHandler) DeleteProjectCollaborator(c *gin.Context) {
+    token, ok := oputils.GetTokenFromContext(c)
+    if !ok {
+        var err error
+        token, err = oputils.ExtractBearerToken(c)
+        if err != nil {
+            oputils.RespondWithAuthError(c, err)
+            return
+        }
+    }
+
+    projectIDStr := c.Param("id")
+    userIDStr := c.Param("userId")
+    projectID, err := strconv.ParseUint(projectIDStr, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_PROJECT_ID", "message": "project id must be uint"})
+        return
+    }
+    userID, err := strconv.ParseUint(userIDStr, 10, 64)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "INVALID_USER_ID", "message": "user id must be uint"})
+        return
+    }
+
+    if err := h.service.RemoveProjectCollaborator(c.Request.Context(), token, projectID, userID); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "REMOVE_COLLABORATOR_FAILED", "message": err.Error()})
+        return
+    }
+
+    c.JSON(http.StatusOK, gin.H{"success": true})
+}

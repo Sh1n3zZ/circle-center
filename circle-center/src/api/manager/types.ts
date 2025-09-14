@@ -54,6 +54,19 @@ export interface AssignRoleRequest {
 
 export interface AssignRoleResponse extends ApiEnvelope<{ ok: boolean }> {}
 
+// Role management types
+export interface CollaboratorInfo {
+  user_id: number;
+  role: 'owner' | 'admin' | 'editor' | 'viewer';
+  added_at: string;
+  username?: string;
+  display_name?: string;
+  avatar_url?: string;
+}
+
+export interface ListProjectRolesResponse
+  extends ApiEnvelope<CollaboratorInfo[]> {}
+
 export interface ProjectTokenModel {
   id: number;
   name: string;
